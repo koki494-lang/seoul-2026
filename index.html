@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+<meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Seoul 2026" />
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" href="icon-192.png" />
+<title>SEOUL 2026 — 旅のしおり</title>
+<style>
+/* =========================================================================
+   DESIGN TOKENS  ―  Apple × Notion × Airbnb の中間
+   白/黒/グレー基調、韓国アクセント(コバルト/レッド)はほんの少し
+   ========================================================================= */
+:root{
+  --bg:#fbfbfd; --bg-elev:#ffffff; --bg-soft:#f2f2f5;
+  --ink:#0a0a0a; --ink-2:#3c3c43; --ink-3:#86868b; --ink-4:#b0b0b6;
+  --line:rgba(0,0,0,.08); --line-2:rgba(0,0,0,.05);
+  --accent:#2f57d6;      /* taegeuk blue (cobalt) */
+  --accent-soft:#eaeefb;
+  --red:#c8102e;         /* taegeuk red */
+  --red-soft:#fbeaec;
+  --ok:#1f9d55; --ok-soft:#e7f6ee;
+  --warn:#b9770a; --warn-soft:#fdf3e2;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px rgba(0,0,0,.06);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.05),0 16px 48px rgba(0,0,0,.12);
+  --blur:saturate(180%) blur(20px);
+  --r:18px; --r-lg:24px; --r-sm:12px;
+  --nav-h:64px;
+  --maxw:480px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+:root[data-theme="dark"]{
+  --bg:#000000; --bg-elev:#161618; --bg-soft:#1f1f23;
+  --ink:#f5f5f7; --ink-2:#d0d0d5; --ink-3:#8e8e93; --ink-4:#5a5a60;
+  --line:rgba(255,255,255,.10); --line-2:rgba(255,255,255,.06);
+  --accent:#6e8cff; --accent-soft:#1c2440;
+  --red:#ff6b7e; --red-soft:#33181c;
+  --ok:#46d089; --ok-soft:#13261c;
+  --warn:#e3a948; --warn-soft:#2a2113;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.5);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.5),0 16px 48px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP","Noto Sans KR",sans-serif;
+  background:var(--bg); color:var(--ink);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  line-height:1.55; letter-spacing:.01em;
+  transition:background .4s var(--ease),color .4s var(--ease);
+  overscroll-behavior-y:none;
+}
+.app{max-width:var(--maxw);margin:0 auto;min-height:100vh;position:relative;
+  padding-bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 12px);}
+
+/* ---------- typography ---------- */
+h1,h2,h3,h4{margin:0;font-weight:680;letter-spacing:-.02em;line-height:1.18;}
+.eyebrow{font-size:11px;font-weight:680;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);}
+.muted{color:var(--ink-3);}
+.tiny{font-size:12px;}
+a{color:var(--accent);text-decoration:none;}
+
+/* ---------- header ---------- */
+.topbar{position:sticky;top:0;z-index:40;
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  background:color-mix(in srgb,var(--bg) 72%,transparent);
+  border-bottom:1px solid var(--line-2);
+  padding:calc(env(safe-area-inset-top) + 10px) 20px 10px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.topbar .brand{display:flex;flex-direction:column;}
+.topbar .brand b{font-size:16px;letter-spacing:-.01em;}
+.topbar .brand span{font-size:11px;color:var(--ink-3);letter-spacing:.04em;}
+.iconbtn{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+  background:var(--bg-elev);display:grid;place-items:center;cursor:pointer;
+  font-size:17px;color:var(--ink);transition:transform .2s var(--ease),background .3s;}
+.iconbtn:active{transform:scale(.9);}
+
+/* ---------- page / sections ---------- */
+.page{display:none;padding:20px 18px 8px;animation:fade .5s var(--ease);}
+.page.active{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+.section-title{display:flex;align-items:baseline;justify-content:space-between;margin:26px 4px 12px;}
+.section-title h2{font-size:20px;}
+.section-title .more{font-size:13px;color:var(--ink-3);}
+
+/* ---------- card ---------- */
+.card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:18px;transition:transform .25s var(--ease),box-shadow .25s;}
+.card.tap{cursor:pointer;}
+.card.tap:active{transform:scale(.985);}
+.grid{display:grid;gap:12px;}
+.g2{grid-template-columns:1fr 1fr;}
+
+/* ---------- chips / pills ---------- */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:560;
+  padding:5px 10px;border-radius:999px;background:var(--bg-soft);color:var(--ink-2);
+  border:1px solid var(--line-2);white-space:nowrap;}
+.chip.accent{background:var(--accent-soft);color:var(--accent);border-color:transparent;}
+.chip.red{background:var(--red-soft);color:var(--red);border-color:transparent;}
+.chip.ok{background:var(--ok-soft);color:var(--ok);border-color:transparent;}
+.chip.warn{background:var(--warn-soft);color:var(--warn);border-color:transparent;}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* ---------- buttons ---------- */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  font-size:14px;font-weight:620;padding:11px 16px;border-radius:13px;
+  border:1px solid var(--line);background:var(--bg-elev);color:var(--ink);
+  cursor:pointer;transition:transform .18s var(--ease),background .25s;width:100%;}
+.btn:active{transform:scale(.97);}
+.btn.primary{background:var(--ink);color:var(--bg);border-color:transparent;}
+.btn.map{background:var(--accent);color:#fff;border-color:transparent;}
+.btn.ghost{background:transparent;}
+.btn.sm{padding:8px 12px;font-size:13px;width:auto;border-radius:11px;}
+
+/* =========================================================================
+   HOME
+   ========================================================================= */
+.hero{position:relative;border-radius:var(--r-lg);overflow:hidden;
+  padding:26px 22px 24px;color:#fff;box-shadow:var(--shadow-lg);
+  background:
+    radial-gradient(120% 80% at 80% -10%,rgba(110,140,255,.55),transparent 60%),
+    radial-gradient(120% 90% at -10% 110%,rgba(200,16,46,.45),transparent 55%),
+    linear-gradient(160deg,#1c1f2b,#0a0b10);}
+.hero .eyebrow{color:rgba(255,255,255,.7);}
+.hero h1{font-size:30px;margin:8px 0 2px;letter-spacing:-.03em;}
+.hero .sub{font-size:13px;color:rgba(255,255,255,.78);}
+.countdown{display:flex;gap:10px;margin-top:20px;}
+.cd-box{flex:1;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16);
+  border-radius:14px;padding:12px 8px;text-align:center;backdrop-filter:blur(8px);}
+.cd-box b{display:block;font-size:26px;font-weight:720;letter-spacing:-.02em;line-height:1;}
+.cd-box span{font-size:10px;letter-spacing:.1em;color:rgba(255,255,255,.65);text-transform:uppercase;}
+.theme-quote{margin-top:18px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,255,255,.08);border-left:3px solid rgba(255,255,255,.5);
+  font-size:13px;line-height:1.65;color:rgba(255,255,255,.92);}
+
+/* progress bar */
+.progress-wrap{margin-top:6px;}
+.bar{height:8px;border-radius:999px;background:var(--bg-soft);overflow:hidden;}
+.bar>i{display:block;height:100%;border-radius:999px;
+  background:linear-gradient(90deg,var(--accent),#6e8cff);transition:width .8s var(--ease);}
+
+/* weather strip */
+.weather{display:flex;gap:8px;overflow-x:auto;padding:2px;scrollbar-width:none;}
+.weather::-webkit-scrollbar{display:none;}
+.wx{min-width:74px;flex:0 0 auto;text-align:center;padding:12px 6px;border-radius:14px;
+  background:var(--bg-elev);border:1px solid var(--line);}
+.wx .d{font-size:11px;color:var(--ink-3);}
+.wx .ico{font-size:24px;margin:4px 0;}
+.wx .t{font-size:13px;font-weight:620;}
+.wx .t small{color:var(--ink-3);font-weight:500;}
+.wx .r{font-size:10px;color:var(--accent);margin-top:2px;}
+
+/* today card */
+.today-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--line-2);}
+.today-item:last-child{border-bottom:0;}
+.today-item .tm{font-size:12px;font-weight:680;color:var(--ink-3);min-width:46px;font-variant-numeric:tabular-nums;}
+.today-item .tx{font-size:14px;}
+
+/* =========================================================================
+   TIMELINE (旅程)
+   ========================================================================= */
+.daytabs{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 12px;scrollbar-width:none;
+  position:sticky;top:calc(env(safe-area-inset-top) + 58px);z-index:30;
+  background:var(--bg);}
+.daytabs::-webkit-scrollbar{display:none;}
+.daytab{flex:0 0 auto;padding:9px 15px;border-radius:13px;border:1px solid var(--line);
+  background:var(--bg-elev);cursor:pointer;text-align:center;min-width:62px;transition:.25s var(--ease);}
+.daytab b{display:block;font-size:14px;font-weight:680;}
+.daytab span{font-size:10px;color:var(--ink-3);}
+.daytab.on{background:var(--ink);border-color:transparent;}
+.daytab.on b,.daytab.on span{color:var(--bg);}
+
+.tl{position:relative;padding-left:30px;}
+.tl::before{content:"";position:absolute;left:9px;top:6px;bottom:14px;width:2px;
+  background:linear-gradient(var(--line),var(--line) 70%,transparent);}
+.tl-item{position:relative;margin-bottom:14px;animation:fade .5s var(--ease) backwards;}
+.tl-dot{position:absolute;left:-30px;top:4px;width:20px;height:20px;border-radius:50%;
+  background:var(--bg);border:2px solid var(--ink-4);display:grid;place-items:center;font-size:10px;z-index:2;}
+.tl-item.spot .tl-dot{border-color:var(--accent);}
+.tl-item.meal .tl-dot{border-color:var(--warn);}
+.tl-item.flight .tl-dot{border-color:var(--red);}
+.tl-item.free .tl-dot{border-color:var(--ok);}
+.tl-time{font-size:12px;font-weight:700;color:var(--ink-2);font-variant-numeric:tabular-nums;margin-bottom:5px;display:flex;gap:8px;align-items:center;}
+.tl-card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 15px;box-shadow:var(--shadow);}
+.tl-card.tap{cursor:pointer;}
+.tl-card.tap:active{transform:scale(.985);}
+.tl-card h4{font-size:15px;margin-bottom:3px;}
+.tl-card .meta{font-size:12px;color:var(--ink-3);}
+.tl-card .note{font-size:12.5px;color:var(--ink-2);margin-top:7px;line-height:1.6;}
+.move{display:flex;align-items:center;gap:9px;margin:2px 0 2px -2px;padding:7px 12px;
+  font-size:12px;color:var(--ink-3);background:var(--bg-soft);border-radius:11px;width:fit-content;}
+.move b{color:var(--ink-2);font-weight:620;}
+
+/* =========================================================================
+   SPOTS
+   ========================================================================= */
+.spot-card{display:flex;gap:13px;align-items:flex-start;}
+.spot-emoji{width:50px;height:50px;border-radius:14px;background:var(--bg-soft);
+  display:grid;place-items:center;font-size:25px;flex:0 0 auto;}
+.spot-card h4{font-size:15px;}
+.spot-card .ko{font-size:12px;color:var(--ink-3);}
+.spot-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+.spot-meta .m{font-size:11.5px;color:var(--ink-2);display:inline-flex;gap:4px;align-items:center;}
+.spot-meta .m b{color:var(--ink-3);font-weight:500;}
+
+/* =========================================================================
+   CHECKLIST (準備)
+   ========================================================================= */
+.check{display:flex;align-items:center;gap:13px;padding:13px 4px;border-bottom:1px solid var(--line-2);cursor:pointer;}
+.check:last-child{border-bottom:0;}
+.check .box{width:24px;height:24px;border-radius:8px;border:2px solid var(--ink-4);
+  display:grid;place-items:center;flex:0 0 auto;transition:.2s var(--ease);color:transparent;font-size:13px;font-weight:800;}
+.check.done .box{background:var(--ok);border-color:var(--ok);color:#fff;}
+.check .lbl{font-size:14.5px;transition:.25s;}
+.check.done .lbl{color:var(--ink-4);text-decoration:line-through;}
+.check .sub{font-size:11.5px;color:var(--ink-3);}
+
+/* =========================================================================
+   PHRASES / CONTACTS / TRANSPORT (もしも)
+   ========================================================================= */
+.acc{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:var(--bg-elev);box-shadow:var(--shadow);}
+.acc + .acc{margin-top:12px;}
+.acc-head{display:flex;align-items:center;gap:11px;padding:15px 16px;cursor:pointer;}
+.acc-head .ic{font-size:20px;}
+.acc-head h4{font-size:15px;flex:1;}
+.acc-head .arw{color:var(--ink-3);transition:transform .3s var(--ease);font-size:13px;}
+.acc.open .acc-head .arw{transform:rotate(90deg);}
+.acc-body{max-height:0;overflow:hidden;transition:max-height .45s var(--ease);}
+.acc.open .acc-body{max-height:2400px;}
+.acc-inner{padding:0 16px 16px;}
+
+.phrase{padding:12px 0;border-bottom:1px solid var(--line-2);}
+.phrase:last-child{border-bottom:0;}
+.phrase .ko{font-size:17px;font-weight:620;letter-spacing:-.01em;}
+.phrase .yomi{font-size:12.5px;color:var(--accent);margin-top:1px;}
+.phrase .ja{font-size:12.5px;color:var(--ink-3);margin-top:2px;}
+
+.contact{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2);}
+.contact:last-child{border-bottom:0;}
+.contact .ic{width:40px;height:40px;border-radius:12px;background:var(--red-soft);color:var(--red);display:grid;place-items:center;font-size:19px;flex:0 0 auto;}
+.contact .info{flex:1;}
+.contact .info b{font-size:14px;display:block;}
+.contact .info span{font-size:12px;color:var(--ink-3);}
+.contact a.call{font-size:13px;font-weight:680;color:var(--accent);padding:8px 12px;border:1px solid var(--line);border-radius:11px;}
+
+.step{display:flex;gap:12px;padding:10px 0;}
+.step .n{width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+  font-size:12px;font-weight:720;display:grid;place-items:center;flex:0 0 auto;}
+.step .tx{font-size:13.5px;line-height:1.6;}
+.step .tx b{font-weight:620;}
+
+/* =========================================================================
+   BUDGET
+   ========================================================================= */
+.budget-head{text-align:center;padding:8px 0 16px;}
+.budget-head .big{font-size:34px;font-weight:740;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+.budget-head .big small{font-size:16px;color:var(--ink-3);font-weight:600;}
+.budget-head .sub{font-size:12.5px;color:var(--ink-3);}
+.bgrid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:6px;}
+.bcat{padding:13px;border-radius:14px;background:var(--bg-soft);}
+.bcat .c{font-size:12px;color:var(--ink-3);}
+.bcat .v{font-size:16px;font-weight:680;font-variant-numeric:tabular-nums;}
+.binput{display:flex;gap:8px;margin-top:12px;}
+.binput select,.binput input{font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;
+  border:1px solid var(--line);background:var(--bg);color:var(--ink);}
+.binput input{flex:1;min-width:0;}
+.binput select{flex:0 0 92px;}
+.bentry{display:flex;align-items:center;gap:10px;padding:11px 2px;border-bottom:1px solid var(--line-2);font-size:14px;}
+.bentry .ec{flex:1;}
+.bentry .ev{font-weight:680;font-variant-numeric:tabular-nums;}
+.bentry .del{color:var(--ink-4);font-size:18px;cursor:pointer;padding:0 4px;}
+
+/* =========================================================================
+   DIARY / ALBUM
+   ========================================================================= */
+.diary-day{margin-bottom:16px;}
+.diary-day textarea{width:100%;font:inherit;font-size:14px;line-height:1.65;border:1px solid var(--line);
+  border-radius:13px;padding:12px;background:var(--bg);color:var(--ink);resize:vertical;min-height:74px;}
+.photo-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.photo{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.photo .x{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;
+  background:rgba(0,0,0,.6);color:#fff;display:grid;place-items:center;font-size:12px;cursor:pointer;}
+.addphoto{width:74px;height:74px;border-radius:12px;border:1.5px dashed var(--line);
+  display:grid;place-items:center;font-size:22px;color:var(--ink-3);cursor:pointer;background:var(--bg-soft);}
+.album-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px;}
+.album-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px;}
+.album-empty{text-align:center;padding:40px 20px;color:var(--ink-3);font-size:13px;}
+
+/* =========================================================================
+   BOTTOM NAV
+   ========================================================================= */
+.nav{position:fixed;left:0;right:0;bottom:0;z-index:50;
+  max-width:var(--maxw);margin:0 auto;
+  padding:8px 6px calc(env(safe-area-inset-bottom) + 6px);
+  display:grid;grid-template-columns:repeat(6,1fr);
+  backdrop-filter:var(--blur);-webkit-backdrop-filter:var(--blur);
+  background:color-mix(in srgb,var(--bg) 78%,transparent);
+  border-top:1px solid var(--line-2);}
+.nav button{background:none;border:0;cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;gap:3px;padding:5px 0;color:var(--ink-4);transition:color .25s;}
+.nav button .i{font-size:21px;line-height:1;}
+.nav button .t{font-size:9.5px;font-weight:600;letter-spacing:.01em;}
+.nav button.on{color:var(--ink);}
+.nav button.on .i{transform:translateY(-1px);}
+
+/* ---------- modal (spot detail) ---------- */
+.sheet-bg{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .3s;backdrop-filter:blur(2px);}
+.sheet-bg.show{opacity:1;pointer-events:auto;}
+.sheet{position:fixed;left:50%;bottom:0;transform:translate(-50%,100%);z-index:61;
+  width:100%;max-width:var(--maxw);max-height:88vh;overflow-y:auto;
+  background:var(--bg);border-radius:24px 24px 0 0;box-shadow:var(--shadow-lg);
+  transition:transform .42s var(--ease);padding:10px 20px calc(env(safe-area-inset-bottom) + 24px);}
+.sheet.show{transform:translate(-50%,0);}
+.sheet .grab{width:38px;height:5px;border-radius:3px;background:var(--ink-4);opacity:.4;margin:8px auto 14px;}
+.sheet h3{font-size:21px;}
+.sheet .ko{color:var(--ink-3);font-size:13px;margin-bottom:14px;}
+.detail-row{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--line-2);font-size:13.5px;}
+.detail-row .k{color:var(--ink-3);min-width:70px;}
+.detail-row .v{flex:1;}
+
+.foot{text-align:center;color:var(--ink-4);font-size:11px;padding:26px 0 8px;line-height:1.7;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===== TOP BAR ===== -->
+  <header class="topbar">
+    <div class="brand">
+      <b id="topTitle">ホーム</b>
+      <span>SEOUL · 2026.6.29 – 7.2</span>
+    </div>
+    <button class="iconbtn" id="themeBtn" aria-label="テーマ切替">🌙</button>
+  </header>
+
+  <!-- ===================== HOME ===================== -->
+  <section class="page active" id="page-home">
+    <div class="hero">
+      <div class="eyebrow">4 days in Seoul</div>
+      <h1>ソウルへ。</h1>
+      <div class="sub">2026年 6月29日(月) – 7月2日(木)</div>
+      <div class="countdown" id="countdown"></div>
+      <div class="theme-quote" id="themeQuote"></div>
+    </div>
+
+    <div class="section-title"><h2>旅の進捗</h2><span class="more" id="progPct">0%</span></div>
+    <div class="card progress-wrap">
+      <div class="bar"><i id="progBar" style="width:0%"></i></div>
+      <div class="row" style="justify-content:space-between;margin-top:10px;">
+        <span class="tiny muted" id="progText">出発までカウントダウン中</span>
+      </div>
+    </div>
+
+    <div class="section-title"><h2>天気</h2><span class="more">ソウル</span></div>
+    <div class="weather" id="weather"></div>
+
+    <div class="section-title"><h2 id="todayTitle">今日の予定</h2><span class="more" id="todayDay"></span></div>
+    <div class="card" id="todayCard"></div>
+
+    <div class="section-title"><h2>クイック</h2></div>
+    <div class="grid g2">
+      <div class="card tap" onclick="go('plan')"><div style="font-size:24px">🗓</div><h4 style="margin-top:8px;font-size:15px">旅程</h4><div class="tiny muted">4日間のタイムライン</div></div>
+      <div class="card tap" onclick="go('more');setTimeout(()=>toggleAcc('acc-phrase'),300)"><div style="font-size:24px">🇰🇷</div><h4 style="margin-top:8px;font-size:15px">韓国語</h4><div class="tiny muted">困ったときのフレーズ</div></div>
+      <div class="card tap" onclick="go('prep')"><div style="font-size:24px">🎒</div><h4 style="margin-top:8px;font-size:15px">持ち物</h4><div class="tiny muted">忘れ物チェック</div></div>
+      <div class="card tap" onclick="go('more');setTimeout(()=>toggleAcc('acc-sos'),300)"><div style="font-size:24px">🆘</div><h4 style="margin-top:8px;font-size:15px">緊急連絡先</h4><div class="tiny muted">もしものとき</div></div>
+    </div>
+
+    <!-- hotel component -->
+    <div class="section-title"><h2>宿泊</h2></div>
+    <div id="hotelCard"></div>
+
+    <div class="foot">made with ♡ for an unforgettable trip<br/>オフラインでも動きます · チェック内容は端末に保存されます</div>
+  </section>
+
+  <!-- ===================== PLAN (TIMELINE) ===================== -->
+  <section class="page" id="page-plan">
+    <div class="daytabs" id="daytabs"></div>
+    <div id="dayHead" style="margin:2px 4px 16px;"></div>
+    <div class="tl" id="timeline"></div>
+    <div class="foot">タップで各スポットの詳細・地図が開きます</div>
+  </section>
+
+  <!-- ===================== SPOTS ===================== -->
+  <section class="page" id="page-spots">
+    <h1 style="font-size:26px;margin:4px 0 4px;">スポット</h1>
+    <p class="muted tiny" style="margin:0 0 4px;">行き先の営業時間・料金・所要時間。カードから地図へ。</p>
+    <div id="spotFilter" class="row" style="margin:14px 0 4px;"></div>
+    <div class="grid" id="spotList" style="margin-top:10px;"></div>
+    <div class="foot"></div>
+  </section>
+
+  <!-- ===================== PREP (CHECKLIST) ===================== -->
+  <section class="page" id="page-prep">
+    <h1 style="font-size:26px;margin:4px 0 4px;">準備</h1>
+    <p class="muted tiny" style="margin:0 0 4px;">タップでチェック。状態は自動保存。</p>
+
+    <div class="section-title"><h2>やること</h2><span class="more" id="todoPct"></span></div>
+    <div class="card" id="todoList"></div>
+
+    <div class="section-title"><h2>持ち物</h2><span class="more" id="packPct"></span></div>
+    <div class="card" id="packList"></div>
+
+    <button class="btn ghost" style="margin-top:18px" onclick="resetChecks()">チェックをすべてリセット</button>
+    <div class="foot"></div>
+  </section>
+
+  <!-- ===================== MORE (もしも) ===================== -->
+  <section class="page" id="page-more">
+    <h1 style="font-size:26px;margin:4px 0 14px;">もしも / 便利</h1>
+
+    <!-- budget -->
+    <div class="acc open" id="acc-budget">
+      <div class="acc-head" onclick="toggleAcc('acc-budget')"><span class="ic">💰</span><h4>予算管理</h4><span class="arw">›</span></div>
+      <div class="acc-body"><div class="acc-inner" id="budgetBox"></div></div>
+    </div>
+
+    <!-- phrases -->
+    <div class="acc" id="acc-phrase">
+      <div class="acc-head" onclick="toggleAcc('acc-phrase')"><span class="ic">🇰🇷</span><h4>韓国語フレーズ集</h4><span class="arw">›</span></div>
+      <div class="acc-body"><div class="acc-inner" id="phraseBox"></div></div>
+    </div>
+
+    <!-- transport -->
+    <div class="acc" id="acc-trans">
+      <div class="acc-head" onclick="toggleAcc('acc-trans')"><span class="ic">🚇</span><h4>交通機関の使い方</h4><span class="arw">›</span></div>
+      <div class="acc-body"><div class="acc-inner" id="transBox"></div></div>
+    </div>
+
+    <!-- emergency -->
+    <div class="acc" id="acc-sos">
+      <div class="acc-head" onclick="toggleAcc('acc-sos')"><span class="ic">🆘</span><h4>緊急連絡先</h4><span class="arw">›</span></div>
+      <div class="acc-body"><div class="acc-inner" id="sosBox"></div></div>
+    </div>
+
+    <div class="foot"></div>
+  </section>
+
+  <!-- ===================== DIARY ===================== -->
+  <section class="page" id="page-diary">
+    <h1 style="font-size:26px;margin:4px 0 4px;">旅日記</h1>
+    <p class="muted tiny" style="margin:0 0 14px;">その日の気持ちと写真を残そう。すべて端末内に保存。</p>
+    <div id="diaryBox"></div>
+
+    <div class="section-title"><h2>思い出アルバム</h2><span class="more" id="albumCount"></span></div>
+    <div id="albumBox"></div>
+    <div class="foot">帰国後、ここを開けば旅がまるごと残っています ✈︎</div>
+  </section>
+
+  <!-- ===== BOTTOM NAV ===== -->
+  <nav class="nav" id="nav"></nav>
+
+  <!-- ===== SPOT SHEET ===== -->
+  <div class="sheet-bg" id="sheetBg" onclick="closeSheet()"></div>
+  <div class="sheet" id="sheet"></div>
+
+</div>
+
+<script>
+/* =========================================================================
+   DATA LAYER  ―  ここを書き換えれば内容が反映される（コンポーネント設計）
+   ========================================================================= */
+const TRIP = {
+  start:"2026-06-29", end:"2026-07-02",
+  theme:"フィリピン留学の頃の、自信があった自分を少し取り戻す旅。観光地の制覇じゃない。海外の空気、人との出会い、韓国の若者文化、現地の”今”の温度を、ちゃんと味わう4日間。"
+};
+
+/* ---- ホテル（コンポーネント化：ここだけ書き換えれば差し替え可） ---- */
+const HOTEL = {
+  name:"STAY OHANA",
+  nameKo:"스테이 오하나",
+  area:"鍾路区 / 安国エリア",
+  address:"32, Ujeongguk-ro 2-gil, Jongno-gu, Seoul 03189",
+  addressJa:"ソウル特別市 鍾路区 Ujeongguk-ro 2-gil 32",
+  checkin:"6/29(月) 15:00以降",
+  checkout:"7/2(木) 11:00まで",
+  nights:"3泊",
+  resv:"1385434680648798",
+  amenities:["手荷物預かり","客室Wi-Fi"],
+  map:"STAY OHANA 스테이오하나 32 Ujeongguk-ro 2-gil Jongno-gu Seoul",
+  note:"北村韓屋村・三清洞・景福宮はすべて徒歩圏。安国駅(3号線)が最寄り。"
+};
+
+/* ---- スポット ---- */
+const SPOTS = {
+  myeongdong:{e:"🛍️",cat:"街歩き",n:"明洞",ko:"명동",hours:"店舗 10:00–22:00 / 屋台は夕方–深夜",price:"散策無料",dur:"1–2時間",
+    area:"中区",map:"명동 명동거리 Myeongdong",
+    desc:"コスメ・グルメ・屋台の定番ストリート。夜のネオンと屋台の匂いで一気に”海外に来た”感が来る。初日の足慣らしにちょうどいい。"},
+  bukchon:{e:"🏯",cat:"街歩き",n:"北村韓屋村",ko:"북촌한옥마을",hours:"常時(住宅地。月–土の昼が静かで◎)",price:"無料",dur:"約1時間",
+    area:"鍾路区 / ホテル徒歩圏",map:"북촌한옥마을 Bukchon Hanok Village",
+    desc:"瓦屋根の韓屋が連なる坂道。写真スポットの宝庫。住民が暮らす場所なので、静かに歩くのがマナー。ホテルから歩いて行ける。"},
+  samcheong:{e:"☕",cat:"街歩き",n:"三清洞",ko:"삼청동",hours:"カフェ/店 11:00–21:00頃",price:"散策無料",dur:"1–2時間",
+    area:"鍾路区 / ホテル徒歩圏",map:"삼청동길 Samcheong-dong",
+    desc:"北村から続く、ギャラリーと洒落たカフェの通り。ゆっくりコーヒーで一息つくのに最高。北村とセットで歩くのが鉄板。"},
+  starfield:{e:"📚",cat:"映え",n:"ピョルマダン図書館",ko:"별마당도서관",hours:"10:00–22:00",price:"無料",dur:"30分–1時間",
+    area:"江南 / COEX B1–1F",map:"별마당도서관 Starfield Library COEX",
+    desc:"13mの巨大本棚で有名なCOEX内の図書館。圧巻のフォトスポット。座って涼んで、空気を味わうだけでも価値あり。"},
+  coex:{e:"🏬",cat:"買い物",n:"COEX Mall",ko:"코엑스몰",hours:"10:30–22:00",price:"無料",dur:"1–2時間",
+    area:"江南",map:"코엑스몰 COEX Mall Samseong",
+    desc:"アジア最大級の地下モール。ピョルマダン図書館もこの中。雨でも一日つぶせる。SMTOWNやアクアリウムも。"},
+  euljiro:{e:"🍶",cat:"夜",n:"乙支路(ヒップ乙支路)",ko:"을지로",hours:"店は夕方–深夜",price:"店による",dur:"2–3時間",
+    area:"中区",map:"을지로 힙지로 Euljiro",
+    desc:"印刷工場街がレトロ酒場のホットスポットに変身したエリア。”ヒップ乙支路”。看板のない隠れ家バーを探す夜が楽しい。"},
+  hongdae:{e:"🎧",cat:"夜",n:"弘大",ko:"홍대",hours:"昼–深夜(夜が本番)",price:"店による",dur:"2–4時間",
+    area:"麻浦区",map:"홍대 홍대입구역 Hongdae",
+    desc:"韓国の若者文化の中心。ストリートライブ、クラブ、深夜まで賑わう。今回の旅テーマにいちばん効くエリア。空気を全身で浴びよう。"},
+  hangang:{e:"🌉",cat:"自由",n:"漢江公園",ko:"한강공원",hours:"常時",price:"無料",dur:"1–2時間",
+    area:"汝矣島ほか",map:"여의도한강공원 Yeouido Hangang Park",
+    desc:"芝生でチメク(チキン+ビール)。コンビニで買って川辺で過ごす”韓国のリアルな日常”。夕暮れ〜夜景が最高。"},
+  gyeongbokgung:{e:"⛩️",cat:"観光",n:"景福宮",ko:"경복궁",hours:"9:00–18:00(最終入場17:00) ※火曜休館",price:"3,000ウォン(韓服着用で無料)",dur:"約1.5時間",
+    area:"鍾路区 / ホテル徒歩圏",map:"경복궁 Gyeongbokgung Palace",
+    desc:"朝鮮王朝の正宮。守門将交代式は10:00/14:00。7/2(木)は開いてる。朝イチで人が少ないうちに。ホテルから歩ける。"},
+  gwanghwamun:{e:"🗽",cat:"観光",n:"光化門広場",ko:"광화문광장",hours:"常時",price:"無料",dur:"30分",
+    area:"鍾路区",map:"광화문광장 Gwanghwamun Square",
+    desc:"世宗大王と李舜臣将軍の像が立つ大広場。景福宮の正面。最終日、空港へ向かう前にサッと立ち寄れる。"}
+};
+
+/* ---- スケジュール ---- */
+const DAYS = [
+  {d:"6/29",dow:"月",label:"到着 & 明洞",items:[
+    {t:"11:45",ty:"flight",h:"関西空港 ✈️ 出発",meta:"KIX → ICN",note:"いってらっしゃい。e-Arrival Card は機内で最終確認を。"},
+    {t:"13:40",ty:"flight",h:"仁川空港 到着",meta:"入国審査 → 荷物 → SIM/Wi-Fi",note:"ahamoはそのまま使える。到着後すぐ機内モード解除＆データ通信ON。T-moneyはコンビニ/駅で購入。"},
+    {move:"AREX＋地下鉄で約1時間20分（ソウル駅経由→3号線 安国）/ 直行ならKakaoTタクシーやAREX直通も"},
+    {t:"15:00",ty:"spot",sp:"",h:"STAY OHANA チェックイン",meta:"鍾路区・安国 / 3泊",note:"荷物を置いて身軽に。年齢確認の書類提示を忘れずに。"},
+    {move:"安国 → 明洞：地下鉄で約15分 / タクシー約10分"},
+    {t:"17:30",ty:"spot",sp:"myeongdong",h:"明洞 散策",meta:"街歩き · 1–2時間",note:"まずは”海外に来た”空気を浴びる。屋台、コスメ、ネオン。"},
+    {t:"19:00",ty:"meal",h:"韓国で最初の夜ご飯",meta:"明洞周辺",note:"サムギョプサル？カルグクス？初日は気分で。”맛있어요(マシッソヨ)”を言ってみよう。"},
+    {t:"21:00",ty:"spot",h:"コンビニ立ち寄り",meta:"GS25 / CU",note:"翌朝の飲み物・夜食。韓国コンビニは宝の山。"},
+    {t:"21:30",ty:"spot",h:"ホテルへ",meta:"おやすみ",note:"初日おつかれさま。明日に備えて。"}
+  ]},
+  {d:"6/30",dow:"火",label:"北村 & 弘大ナイト",items:[
+    {t:"09:30",ty:"spot",sp:"bukchon",h:"北村韓屋村",meta:"街歩き · 約1時間 / ホテルから徒歩",note:"朝の静かな時間が狙い目。坂道の韓屋を写真に。"},
+    {move:"そのまま徒歩で三清洞へ（隣接）"},
+    {t:"11:00",ty:"spot",sp:"samcheong",h:"三清洞 散策＋カフェ",meta:"街歩き・カフェ · 1–2時間",note:"ギャラリー通りでひと休み。韓国のカフェ文化を体感。"},
+    {t:"13:00",ty:"meal",h:"昼：韓国料理",meta:"三清洞 / 鍾路周辺",note:"ビビンバ、参鶏湯、何でも。"},
+    {move:"安国 → 三成(COEX)：地下鉄で約30–35分"},
+    {t:"15:00",ty:"spot",sp:"starfield",h:"ピョルマダン図書館",meta:"映え · 30分–1時間",note:"巨大本棚で一枚。涼みながら。"},
+    {t:"15:45",ty:"spot",sp:"coex",h:"COEX 散策",meta:"買い物 · 1–2時間",note:"地下モールをぶらぶら。"},
+    {move:"COEX → 乙支路：地下鉄で約25分"},
+    {t:"18:30",ty:"spot",sp:"euljiro",h:"乙支路で夜ご飯＆バー",meta:"夜 · レトロ酒場",note:"ヒップ乙支路の隠れ家へ。一杯やって温まる。"},
+    {move:"乙支路 → 弘大：2号線で約20分"},
+    {t:"21:30",ty:"spot",sp:"hongdae",h:"弘大",meta:"夜 · クラブは気分次第",note:"今日のメイン。若者文化のど真ん中。無理せず、でも飛び込む勇気を。"},
+    {t:"00:00",ty:"flight",h:"⚠ 景福宮は火曜休館",meta:"メモ",note:"今日は景福宮NG。7/2(木)朝に回してあるので安心を。"}
+  ]},
+  {d:"7/1",dow:"水",label:"自由 & 再会",items:[
+    {t:"終日",ty:"free",h:"自由行動",meta:"気分で動く一日",note:"候補は下のカードから。無理に詰めない。"},
+    {t:"候補",ty:"spot",sp:"hongdae",h:"弘大 再訪",meta:"昼の顔も見てみる",note:""},
+    {t:"候補",ty:"spot",sp:"hangang",h:"漢江でチメク",meta:"芝生でのんびり",note:"晴れたら絶対これ。川辺で一番”自分を取り戻せる”時間。"},
+    {t:"候補",ty:"spot",h:"カフェ巡り / ショッピング",meta:"気の向くまま",note:"聖水洞や弘大のカフェもおすすめ。"},
+    {t:"18:00",ty:"meal",h:"友達と待ち合わせ 🤝",meta:"フィリピン留学の仲間と再会",note:"今回の旅のハイライト。夜ご飯＆韓国案内をしてもらう。あの頃の自分が、ちゃんと戻ってくる夜。"}
+  ]},
+  {d:"7/2",dow:"木",label:"景福宮 & 帰国",items:[
+    {t:"09:00",ty:"spot",sp:"gyeongbokgung",h:"景福宮",meta:"観光 · 約1.5時間 / ホテルから徒歩",note:"朝イチで。守門将交代式10:00も狙える。火曜じゃないので開いてる◎"},
+    {move:"景福宮 → 光化門：徒歩約10分"},
+    {t:"10:30",ty:"spot",sp:"gwanghwamun",h:"光化門広場",meta:"観光 · 30分",note:"最後にソウルの中心で記念撮影。"},
+    {move:"光化門/ソウル駅 → 仁川空港：AREXで約1時間（チェックアウト11:00まで）"},
+    {t:"12:30",ty:"spot",h:"仁川空港へ",meta:"国際線は2–3時間前到着が安心",note:"ホテルで荷物受け取り→空港。e-Ticket/パスポート確認。"},
+    {t:"14:00",ty:"spot",h:"ラウンジでひと休み",meta:"出国後",note:"旅の余韻に浸る時間。日記を書くなら今。"},
+    {t:"15:55",ty:"flight",h:"仁川空港 ✈️ 出発",meta:"ICN → KIX",note:""},
+    {t:"17:40",ty:"flight",h:"関西空港 到着",meta:"おかえりなさい",note:"少し自信を取り戻した自分で、ただいま。"}
+  ]}
+];
+
+/* ---- チェックリスト ---- */
+const TODOS = [
+  {id:"t1",l:"ホテルの年齢確認の準備",s:"チェックイン時に提示できるよう書類確認"},
+  {id:"t2",l:"e-Arrival Card 提出",s:"入国前にオンライン申請（72時間前から可）"},
+  {id:"t3",l:"海外旅行保険の確認",s:"補償内容・連絡先を控える"},
+  {id:"t4",l:"ahamoの海外データ設定を確認",s:"渡航前にデータローミングONの確認"},
+  {id:"t5",l:"航空券・eチケットの保存",s:"オフラインでも見られるように"},
+  {id:"t6",l:"友達と7/1の待ち合わせ最終確認",s:"場所・時間（18:00）"}
+];
+const PACK = [
+  {id:"p1",l:"パスポート",s:"最重要。残存期間も確認"},
+  {id:"p2",l:"ahamo (スマホ)",s:"海外データそのまま"},
+  {id:"p3",l:"モバイルバッテリー",s:"手荷物へ（預け入れNG）"},
+  {id:"p4",l:"クレジットカード",s:"タッチ決済が便利"},
+  {id:"p5",l:"現金（ウォン）",s:"屋台・市場用に少し"},
+  {id:"p6",l:"充電器",s:"韓国はCタイプ。変換プラグ確認"}
+];
+
+/* ---- 韓国語フレーズ ---- */
+const PHRASES = [
+  {g:"あいさつ",items:[
+    {ko:"안녕하세요",y:"アンニョンハセヨ",ja:"こんにちは"},
+    {ko:"감사합니다",y:"カムサハムニダ",ja:"ありがとうございます"},
+    {ko:"네 / 아니요",y:"ネ / アニヨ",ja:"はい / いいえ"},
+    {ko:"괜찮아요",y:"ケンチャナヨ",ja:"大丈夫です"},
+    {ko:"죄송합니다",y:"チェソンハムニダ",ja:"すみません(謝罪)"}
+  ]},
+  {g:"お店・注文",items:[
+    {ko:"저기요",y:"チョギヨ",ja:"すみません(店員を呼ぶ)"},
+    {ko:"이거 주세요",y:"イゴ ジュセヨ",ja:"これください"},
+    {ko:"얼마예요?",y:"オルマエヨ?",ja:"いくらですか?"},
+    {ko:"계산해 주세요",y:"ケサネ ジュセヨ",ja:"お会計お願いします"},
+    {ko:"안 맵게 해주세요",y:"アン メッケ ヘジュセヨ",ja:"辛くしないでください"},
+    {ko:"맛있어요",y:"マシッソヨ",ja:"おいしいです"}
+  ]},
+  {g:"夜・出会い",items:[
+    {ko:"건배",y:"コンベ",ja:"乾杯"},
+    {ko:"한 잔 더 주세요",y:"ハン ジャン ド ジュセヨ",ja:"もう一杯ください"},
+    {ko:"이름이 뭐예요?",y:"イルミ モエヨ?",ja:"お名前は?"},
+    {ko:"같이 사진 찍어도 돼요?",y:"カチ サジン チゴド ドェヨ?",ja:"一緒に写真いいですか?"}
+  ]},
+  {g:"困ったとき",items:[
+    {ko:"영어 할 수 있어요?",y:"ヨンオ ハル ス イッソヨ?",ja:"英語できますか?"},
+    {ko:"화장실 어디예요?",y:"ファジャンシル オディエヨ?",ja:"トイレはどこですか?"},
+    {ko:"도와주세요",y:"トワジュセヨ",ja:"助けてください"},
+    {ko:"천천히 말해 주세요",y:"チョンチョニ マレ ジュセヨ",ja:"ゆっくり話してください"}
+  ]}
+];
+
+/* ---- 緊急連絡先 ---- */
+const CONTACTS = [
+  {ic:"🚓",n:"警察",s:"事件・事故",tel:"112"},
+  {ic:"🚑",n:"救急・消防",s:"急病・火災",tel:"119"},
+  {ic:"🗣️",n:"観光通訳案内(日本語OK)",s:"24時間 / 道案内・通訳",tel:"1330"},
+  {ic:"🏛️",n:"在大韓民国 日本国大使館",s:"鍾路区. パスポート紛失等",tel:"+82-2-2170-5200"},
+  {ic:"🏥",n:"外国人向け医療相談",s:"BBB Korea 通訳ボランティア",tel:"1588-5644"}
+];
+
+/* ---- 交通 ---- */
+const TRANSPORT = [
+  {ic:"🚆",t:"空港 → ホテル(安国)",steps:[
+    "仁川空港でAREX(空港鉄道)に乗車。<b>直通はソウル駅まで約43分(9,500W)</b>、一般列車は各駅停車で少し安い。",
+    "<b>ソウル駅</b>で下車 → 1号線で<b>鍾路3街</b> → 3号線に乗換え → <b>安国駅</b>下車。",
+    "安国駅から徒歩でホテルへ。荷物が多ければ、空港からKakao Tタクシー(約1時間/料金高め)も楽。"
+  ]},
+  {ic:"💳",t:"T-money カード",steps:[
+    "コンビニ(GS25/CU)や駅の券売機で購入(カード代 約3,000W)。",
+    "現金でチャージ → 地下鉄・バス・タクシー・コンビニで使える。",
+    "改札・バス乗車口でタッチするだけ。乗換割引も自動。"
+  ]},
+  {ic:"🚇",t:"地下鉄のコツ",steps:[
+    "路線は色分け。Googleマップ/Naver Mapでルート検索が確実。",
+    "始発5時台〜終電24時頃。週末は延長運転の路線も。",
+    "乗換は案内表示が日本語/英語併記。慌てず番号(出口)を確認。"
+  ]},
+  {ic:"🚕",t:"タクシー / Kakao T",steps:[
+    "アプリ<b>Kakao T</b>を入れておくと言葉いらずで呼べる。",
+    "一般タクシーは初乗り約4,800W〜。深夜割増あり。",
+    "目的地はハングルか地図ピンで見せるとスムーズ。"
+  ]}
+];
+
+/* 予算カテゴリ */
+const BUDGET_CATS = ["食事","交通","買い物","観光","その他"];
+const BUDGET_PLAN = 80000; // 目安(円) 編集可
+
+/* 天気フォールバック(オフライン用 / 6月末ソウルは梅雨気味) */
+const WX_FALLBACK = {
+  "2026-06-29":{c:3,hi:29,lo:22,r:50},
+  "2026-06-30":{c:61,hi:28,lo:22,r:60},
+  "2026-07-01":{c:80,hi:27,lo:23,r:70},
+  "2026-07-02":{c:2,hi:30,lo:23,r:40}
+};
+function wxIcon(code){
+  if(code===0)return"☀️";
+  if([1,2].includes(code))return"⛅";
+  if(code===3)return"☁️";
+  if([45,48].includes(code))return"🌫️";
+  if([51,53,55,56,57].includes(code))return"🌦️";
+  if([61,63,65,66,67,80,81,82].includes(code))return"🌧️";
+  if([71,73,75,77,85,86].includes(code))return"❄️";
+  if([95,96,99].includes(code))return"⛈️";
+  return"🌤️";
+}
+
+/* =========================================================================
+   STATE (localStorage)
+   ========================================================================= */
+const LS="seoul2026_v1";
+let STATE=load();
+function load(){try{return JSON.parse(localStorage.getItem(LS))||{}}catch(e){return{}}}
+function save(){localStorage.setItem(LS,JSON.stringify(STATE));}
+function get(k,d){return STATE[k]===undefined?d:STATE[k];}
+function set(k,v){STATE[k]=v;save();}
+
+STATE.checks = STATE.checks||{};
+STATE.budget = STATE.budget||[];
+STATE.diary  = STATE.diary||{};
+STATE.budgetPlan = STATE.budgetPlan||BUDGET_PLAN;
+STATE.rate = STATE.rate||11;   // 100ウォン ≈ ◯円（編集可）
+
+/* =========================================================================
+   ROUTER
+   ========================================================================= */
+const TABS=[
+  {id:"home",i:"🏠",t:"ホーム"},
+  {id:"plan",i:"🗓",t:"旅程"},
+  {id:"spots",i:"📍",t:"スポット"},
+  {id:"prep",i:"🎒",t:"準備"},
+  {id:"more",i:"💬",t:"もしも"},
+  {id:"diary",i:"📔",t:"日記"}
+];
+function renderNav(){
+  nav.innerHTML=TABS.map(t=>`<button data-id="${t.id}" onclick="go('${t.id}')"><span class="i">${t.i}</span><span class="t">${t.t}</span></button>`).join("");
+}
+function go(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+id).classList.add("active");
+  document.querySelectorAll(".nav button").forEach(b=>b.classList.toggle("on",b.dataset.id===id));
+  topTitle.textContent=TABS.find(t=>t.id===id).t;
+  window.scrollTo({top:0,behavior:"instant"});
+}
+
+/* =========================================================================
+   THEME
+   ========================================================================= */
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  themeBtn.textContent = t==="dark"?"☀️":"🌙";
+  set("theme",t);
+}
+(function initTheme(){
+  const saved=get("theme");
+  const sys=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";
+  applyTheme(saved||sys);
+})();
+themeBtn.onclick=()=>applyTheme(document.documentElement.getAttribute("data-theme")==="dark"?"light":"dark");
+
+/* =========================================================================
+   COUNTDOWN / PROGRESS
+   ========================================================================= */
+function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x;}
+function dday(){
+  const now=new Date();
+  const s=startOfDay(TRIP.start), e=startOfDay(TRIP.end);
+  const today=startOfDay(now);
+  const msDay=86400000;
+  const toStart=Math.round((s-today)/msDay);
+  return {now,s,e,today,toStart};
+}
+function renderCountdown(){
+  const {toStart}=dday();
+  let boxes;
+  if(toStart>0){
+    boxes=[["D-"+toStart,"出発まで"],["6.29","START"],["7.2","RETURN"],["4","DAYS"]];
+    themeQuote.textContent="“"+TRIP.theme+"”";
+  }else if(toStart<=0){
+    const dayNo=Math.min(Math.max(1,Math.round((dday().today-dday().s)/86400000)+1),4);
+    boxes=[["Day "+dayNo,"旅 "+dayNo+"日目"],["6.29","START"],["7.2","RETURN"],["4","DAYS"]];
+    themeQuote.textContent="“"+TRIP.theme+"”";
+  }
+  countdown.innerHTML=boxes.map(b=>`<div class="cd-box"><b>${b[0]}</b><span>${b[1]}</span></div>`).join("");
+}
+function renderProgress(){
+  // 進捗 = 出発前→0%、旅程中→経過日数、終了後→100%
+  const {today,s,e}=dday();
+  const total=(e-s)/86400000+1; // 4
+  let done=(today-s)/86400000+1;
+  done=Math.max(0,Math.min(total,done));
+  let pct=Math.round(done/total*100);
+  if(today<s)pct=0;
+  progBar.style.width=pct+"%";
+  progPct.textContent=pct+"%";
+  if(today<s){progText.textContent="出発前 — 準備を整えよう 🎒";}
+  else if(today>e){progText.textContent="旅は終わり。おかえりなさい ✈︎";}
+  else{progText.textContent="旅の真っ最中 — 今日を味わって 🌿";}
+}
+
+/* =========================================================================
+   WEATHER (取得しやすい設計: Open-Meteo無料API + オフラインfallback)
+   ========================================================================= */
+async function renderWeather(){
+  const dates=Object.keys(WX_FALLBACK);
+  let data=null;
+  try{
+    const u=`https://api.open-meteo.com/v1/forecast?latitude=37.5665&longitude=126.978&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FSeoul&start_date=${TRIP.start}&end_date=${TRIP.end}`;
+    const r=await fetch(u,{signal:AbortSignal.timeout(4000)});
+    if(r.ok){const j=await r.json();data=j.daily;}
+  }catch(e){/* オフライン → fallback */}
+  weather.innerHTML=dates.map((dt,i)=>{
+    let code,hi,lo,rain;
+    if(data){code=data.weather_code[i];hi=Math.round(data.temperature_2m_max[i]);lo=Math.round(data.temperature_2m_min[i]);rain=data.precipitation_probability_max[i];}
+    else{const f=WX_FALLBACK[dt];code=f.c;hi=f.hi;lo=f.lo;rain=f.r;}
+    const [m,d]=dt.split("-").slice(1);
+    const dow=["日","月","火","水","木","金","土"][new Date(dt).getDay()];
+    return `<div class="wx"><div class="d">${+m}/${+d}(${dow})</div><div class="ico">${wxIcon(code)}</div>
+      <div class="t">${hi}°<small> / ${lo}°</small></div><div class="r">☔${rain??"--"}%</div></div>`;
+  }).join("");
+}
+
+/* =========================================================================
+   HOME: today card + hotel
+   ========================================================================= */
+function todayIndex(){
+  const {today,s}=dday();
+  const i=Math.round((today-s)/86400000);
+  if(i<0)return 0;            // 出発前 → 初日プレビュー
+  if(i>3)return 3;           // 終了後 → 最終日
+  return i;
+}
+function renderToday(){
+  const idx=todayIndex();
+  const day=DAYS[idx];
+  const {toStart}=dday();
+  todayTitle.textContent = toStart>0 ? "出発日のプレビュー" : "今日の予定";
+  todayDay.textContent=`${day.d}(${day.dow}) · ${day.label}`;
+  const items=day.items.filter(it=>!it.move).slice(0,5);
+  todayCard.innerHTML=items.map(it=>`<div class="today-item"><span class="tm">${it.t}</span><span class="tx">${it.h}</span></div>`).join("")
+    + `<button class="btn ghost sm" style="width:100%;margin-top:12px" onclick="go('plan');selDay(${idx})">この日をすべて見る ›</button>`;
+}
+function renderHotel(){
+  const resvMask = HOTEL.resv.length>4 ? "••••"+HOTEL.resv.slice(-4) : HOTEL.resv;
+  hotelCard.innerHTML=`<div class="card">
+    <div class="row" style="justify-content:space-between;align-items:flex-start">
+      <div><h4 style="font-size:16px">🏨 ${HOTEL.name}</h4><div class="tiny muted">${HOTEL.nameKo} · ${HOTEL.area}</div></div>
+      <span class="chip ok">${HOTEL.nights}</span>
+    </div>
+    <div style="margin-top:13px;display:flex;flex-direction:column;gap:7px">
+      <div class="row" style="gap:6px"><span class="chip">IN ${HOTEL.checkin}</span><span class="chip">OUT ${HOTEL.checkout}</span></div>
+      <div class="tiny muted">${HOTEL.addressJa}</div>
+      <div class="tiny" style="color:var(--accent)">💡 ${HOTEL.note}</div>
+    </div>
+    ${mapLinks(HOTEL.map, HOTEL.nameKo)}
+    <div class="tiny muted" style="margin-top:12px">予約番号: ${resvMask} <span style="opacity:.7">（下4桁のみ表示）</span></div>
+  </div>`;
+}
+
+/* =========================================================================
+   PLAN: timeline
+   ========================================================================= */
+let curDay=0;
+function renderDayTabs(){
+  daytabs.innerHTML=DAYS.map((d,i)=>`<div class="daytab ${i===curDay?'on':''}" onclick="selDay(${i})"><b>${d.d}</b><span>${d.dow} · ${d.label.length>6?d.label.slice(0,6)+'…':d.label}</span></div>`).join("");
+}
+function selDay(i){
+  curDay=i; renderDayTabs(); renderTimeline();
+  go('plan');
+  document.querySelectorAll('.daytab')[i]?.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
+}
+function renderTimeline(){
+  const day=DAYS[curDay];
+  dayHead.innerHTML=`<div class="eyebrow">DAY ${curDay+1} · ${day.d}(${day.dow})</div><h2 style="font-size:22px;margin-top:4px">${day.label}</h2>`;
+  let html="",n=0;
+  day.items.forEach(it=>{
+    if(it.move){html+=`<div class="move">🚶 <b>移動</b> · ${it.move}</div>`;return;}
+    n++;
+    const sp=it.sp&&SPOTS[it.sp];
+    const dot={flight:"✈️",meal:"🍽",spot:"📍",free:"✨"}[it.ty]||"•";
+    const tappable=sp?`onclick="openSpot('${it.sp}')"`:"";
+    html+=`<div class="tl-item ${it.ty}" style="animation-delay:${n*.04}s">
+      <div class="tl-dot">${dot}</div>
+      <div class="tl-time">${it.t}</div>
+      <div class="tl-card ${sp?'tap':''}" ${tappable}>
+        <h4>${it.h}</h4>
+        ${it.meta?`<div class="meta">${it.meta}</div>`:""}
+        ${it.note?`<div class="note">${it.note}</div>`:""}
+        ${sp?`<div class="row" style="margin-top:11px;gap:7px"><span class="chip accent">詳細を見る ›</span><span class="chip">⏱ ${sp.dur}</span></div>`:""}
+      </div></div>`;
+  });
+  timeline.innerHTML=html;
+}
+
+/* =========================================================================
+   SPOTS list + filter
+   ========================================================================= */
+let spotCat="すべて";
+function renderSpotFilter(){
+  const cats=["すべて",...new Set(Object.values(SPOTS).map(s=>s.cat))];
+  spotFilter.innerHTML=cats.map(c=>`<span class="chip ${c===spotCat?'accent':''}" onclick="spotCat='${c}';renderSpotFilter();renderSpots()">${c}</span>`).join("");
+}
+function renderSpots(){
+  const list=Object.entries(SPOTS).filter(([id,s])=>spotCat==="すべて"||s.cat===spotCat);
+  spotList.innerHTML=list.map(([id,s])=>`
+    <div class="card tap" onclick="openSpot('${id}')">
+      <div class="spot-card">
+        <div class="spot-emoji">${s.e}</div>
+        <div style="flex:1;min-width:0">
+          <div class="row" style="justify-content:space-between"><h4>${s.n}</h4><span class="chip">${s.cat}</span></div>
+          <div class="ko">${s.ko} · ${s.area}</div>
+          <div class="spot-meta">
+            <span class="m"><b>🕐</b>${s.dur}</span>
+            <span class="m"><b>💴</b>${s.price}</span>
+          </div>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+/* =========================================================================
+   SPOT SHEET
+   ========================================================================= */
+function mapLinks(query,koQuery){
+  const q=encodeURIComponent(query);
+  const nq=encodeURIComponent(koQuery||query);
+  return `
+    <a class="btn map" style="margin-top:18px" href="https://map.naver.com/p/search/${nq}" target="_blank" rel="noopener">🟢 Naver Mapで開く（韓国の道案内はこれ）</a>
+    <div class="row" style="gap:8px;margin-top:8px">
+      <a class="btn sm ghost" style="flex:1" href="https://map.kakao.com/?q=${nq}" target="_blank" rel="noopener">🟡 KakaoMap</a>
+      <a class="btn sm ghost" style="flex:1" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">🔵 Google Maps</a>
+    </div>
+    <div class="tiny muted" style="margin-top:9px;text-align:center">韓国ではGoogleの経路案内が制限されます。移動は<b>Naver Map</b>が確実。</div>`;
+}
+function openSpot(id){
+  const s=SPOTS[id];if(!s)return;
+  sheet.innerHTML=`<div class="grab"></div>
+    <div class="row" style="gap:12px;align-items:flex-start">
+      <div class="spot-emoji" style="width:56px;height:56px;font-size:28px">${s.e}</div>
+      <div><h3>${s.n}</h3><div class="ko">${s.ko}</div></div>
+    </div>
+    <p style="font-size:14px;line-height:1.7;color:var(--ink-2);margin:14px 0 6px">${s.desc}</p>
+    <div class="detail-row"><span class="k">🕐 営業</span><span class="v">${s.hours}</span></div>
+    <div class="detail-row"><span class="k">💴 料金</span><span class="v">${s.price}</span></div>
+    <div class="detail-row"><span class="k">⏱ 所要</span><span class="v">${s.dur}</span></div>
+    <div class="detail-row"><span class="k">📍 エリア</span><span class="v">${s.area}</span></div>
+    ${mapLinks(s.map, s.ko+" "+s.n)}`;
+  sheetBg.classList.add("show");sheet.classList.add("show");
+  document.body.style.overflow="hidden";
+}
+function closeSheet(){sheetBg.classList.remove("show");sheet.classList.remove("show");document.body.style.overflow="";}
+
+/* =========================================================================
+   CHECKLISTS
+   ========================================================================= */
+function renderChecks(){
+  todoList.innerHTML=TODOS.map(t=>checkRow(t)).join("");
+  packList.innerHTML=PACK.map(t=>checkRow(t)).join("");
+  const tD=TODOS.filter(t=>STATE.checks[t.id]).length, pD=PACK.filter(t=>STATE.checks[t.id]).length;
+  todoPct.textContent=`${tD}/${TODOS.length}`;
+  packPct.textContent=`${pD}/${PACK.length}`;
+}
+function checkRow(t){
+  const on=STATE.checks[t.id];
+  return `<div class="check ${on?'done':''}" onclick="toggleCheck('${t.id}')">
+    <div class="box">✓</div>
+    <div style="flex:1"><div class="lbl">${t.l}</div>${t.s?`<div class="sub">${t.s}</div>`:""}</div>
+  </div>`;
+}
+function toggleCheck(id){STATE.checks[id]=!STATE.checks[id];save();renderChecks();}
+function resetChecks(){if(confirm("チェックをすべてリセットしますか？")){STATE.checks={};save();renderChecks();}}
+
+/* =========================================================================
+   MORE: budget / phrases / transport / contacts
+   ========================================================================= */
+function toggleAcc(id){
+  const el=document.getElementById(id);
+  el.classList.toggle("open");
+}
+function renderPhrases(){
+  phraseBox.innerHTML=PHRASES.map(g=>`
+    <div class="eyebrow" style="margin:14px 0 4px">${g.g}</div>
+    ${g.items.map(p=>`<div class="phrase"><div class="ko">${p.ko}</div><div class="yomi">${p.y}</div><div class="ja">${p.ja}</div></div>`).join("")}
+  `).join("");
+}
+function renderTransport(){
+  transBox.innerHTML=TRANSPORT.map(t=>`
+    <div style="margin-top:14px">
+      <div class="row" style="gap:8px;margin-bottom:4px"><span style="font-size:18px">${t.ic}</span><b style="font-size:14.5px">${t.t}</b></div>
+      ${t.steps.map((s,i)=>`<div class="step"><span class="n">${i+1}</span><span class="tx">${s}</span></div>`).join("")}
+    </div>`).join("");
+}
+function renderContacts(){
+  sosBox.innerHTML=`<p class="tiny muted" style="margin:6px 0 4px">番号をタップでそのまま発信できます。</p>`+
+    CONTACTS.map(c=>`<div class="contact">
+      <span class="ic">${c.ic}</span>
+      <div class="info"><b>${c.n}</b><span>${c.s}</span></div>
+      <a class="call" href="tel:${c.tel.replace(/[^+\d]/g,'')}">${c.tel}</a>
+    </div>`).join("");
+}
+/* budget — ウォン/円 両対応。集計は円換算（予算が円のため）。 */
+function toYen(v,cur){return cur==="JPY"?v:Math.round(v*STATE.rate/100);}
+function entryLabel(b){
+  if((b.cur||"JPY")==="KRW")return `₩${b.v.toLocaleString()} <small style="color:var(--ink-3);font-weight:500">≈¥${toYen(b.v,"KRW").toLocaleString()}</small>`;
+  return `¥${b.v.toLocaleString()}`;
+}
+function renderBudget(){
+  const items=STATE.budget;
+  const total=items.reduce((a,b)=>a+toYen(b.v,b.cur||"JPY"),0);
+  const plan=STATE.budgetPlan;
+  const remain=plan-total;
+  const wonEq=Math.round(total*100/STATE.rate);
+  const byCat={};BUDGET_CATS.forEach(c=>byCat[c]=0);
+  items.forEach(b=>byCat[b.c]=(byCat[b.c]||0)+toYen(b.v,b.cur||"JPY"));
+  budgetBox.innerHTML=`
+    <div class="budget-head">
+      <div class="big">¥${total.toLocaleString()}<small> 使用</small></div>
+      <div class="sub">≈ ₩${wonEq.toLocaleString()} · 予算 ¥${plan.toLocaleString()} · ${remain>=0?`残り ¥${remain.toLocaleString()}`:`<span style="color:var(--red)">¥${(-remain).toLocaleString()} オーバー</span>`}</div>
+    </div>
+    <div class="bar"><i style="width:${Math.min(100,plan?total/plan*100:0)}%;${total>plan?'background:var(--red)':''}"></i></div>
+    <div class="bgrid" style="margin-top:14px">
+      ${BUDGET_CATS.map(c=>`<div class="bcat"><div class="c">${c}</div><div class="v">¥${byCat[c].toLocaleString()}</div></div>`).join("")}
+    </div>
+    <div class="binput">
+      <select id="bCat">${BUDGET_CATS.map(c=>`<option>${c}</option>`).join("")}</select>
+      <select id="bCur"><option value="KRW">₩</option><option value="JPY">¥</option></select>
+    </div>
+    <div class="binput" style="margin-top:8px">
+      <input id="bAmt" type="number" inputmode="numeric" placeholder="金額（現地はウォン）" style="flex:1" />
+      <button class="btn primary sm" style="width:auto" onclick="addBudget()">＋ 追加</button>
+    </div>
+    <div style="margin-top:14px">
+      ${items.length?items.map((b,i)=>`<div class="bentry"><span class="ec">${b.c}</span><span class="ev">${entryLabel(b)}</span><span class="del" onclick="delBudget(${i})">×</span></div>`).reverse().join(""):'<p class="tiny muted" style="text-align:center;padding:14px">まだ記録なし。使ったら追加しよう。</p>'}
+    </div>
+    <div class="row" style="gap:8px;margin-top:14px">
+      <button class="btn ghost sm" style="flex:1" onclick="editPlan()">予算 ¥${plan.toLocaleString()}</button>
+      <button class="btn ghost sm" style="flex:1" onclick="editRate()">レート 100₩≈¥${STATE.rate}</button>
+    </div>`;
+}
+function addBudget(){
+  const c=document.getElementById("bCat").value;
+  const cur=document.getElementById("bCur").value;
+  const v=parseInt(document.getElementById("bAmt").value,10);
+  if(!v||v<=0)return;
+  STATE.budget.push({c,v,cur,t:Date.now()});save();renderBudget();
+}
+function editRate(){
+  const v=prompt("為替レート：100ウォン ＝ 何円？（例: 11）",STATE.rate);
+  if(v!==null){const n=parseFloat(v);if(n>0){STATE.rate=n;save();renderBudget();}}
+}
+function delBudget(i){STATE.budget.splice(i,1);save();renderBudget();}
+function editPlan(){
+  const v=prompt("予算額（円）を入力",STATE.budgetPlan);
+  if(v!==null){const n=parseInt(v,10);if(n>0){STATE.budgetPlan=n;save();renderBudget();}}
+}
+
+/* =========================================================================
+   DIARY + ALBUM
+   ========================================================================= */
+function renderDiary(){
+  diaryBox.innerHTML=DAYS.map((d,i)=>{
+    const key="d"+i;
+    const entry=STATE.diary[key]||{text:"",photos:[]};
+    return `<div class="diary-day">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <b style="font-size:15px">Day ${i+1} · ${d.d}(${d.dow})</b>
+        <span class="chip">${d.label}</span>
+      </div>
+      <textarea placeholder="今日感じたこと、出会った人、食べたもの…" oninput="saveDiaryText('${key}',this.value)">${entry.text||""}</textarea>
+      <div class="photo-row">
+        ${(entry.photos||[]).map((p,pi)=>`<div class="photo"><img src="${p}"/><span class="x" onclick="delPhoto('${key}',${pi})">×</span></div>`).join("")}
+        <label class="addphoto">＋<input type="file" accept="image/*" hidden onchange="addPhoto('${key}',this)"/></label>
+      </div>
+    </div>`;
+  }).join("");
+}
+function saveDiaryText(key,val){
+  STATE.diary[key]=STATE.diary[key]||{text:"",photos:[]};
+  STATE.diary[key].text=val;save();
+}
+function addPhoto(key,input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    // 縮小して保存(localStorage容量対策)
+    const img=new Image();
+    img.onload=()=>{
+      const max=900;let{width:w,height:h}=img;
+      if(w>h&&w>max){h=h*max/w;w=max;}else if(h>max){w=w*max/h;h=max;}
+      const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+      cv.getContext("2d").drawImage(img,0,0,w,h);
+      const data=cv.toDataURL("image/jpeg",0.72);
+      STATE.diary[key]=STATE.diary[key]||{text:"",photos:[]};
+      STATE.diary[key].photos.push(data);
+      try{save();}catch(err){alert("写真の保存容量がいっぱいです。古い写真を減らしてください。");STATE.diary[key].photos.pop();return;}
+      renderDiary();renderAlbum();
+    };
+    img.src=e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+function delPhoto(key,pi){
+  if(!confirm("この写真を削除しますか？"))return;
+  STATE.diary[key].photos.splice(pi,1);save();renderDiary();renderAlbum();
+}
+function renderAlbum(){
+  const all=[];
+  DAYS.forEach((d,i)=>{(STATE.diary["d"+i]?.photos||[]).forEach(p=>all.push(p));});
+  albumCount.textContent=all.length?`${all.length}枚`:"";
+  if(!all.length){albumBox.innerHTML=`<div class="card album-empty">📷<br/>まだ写真がありません。<br/>旅の途中で増えていきます。</div>`;return;}
+  albumBox.innerHTML=`<div class="album-grid">${all.map(p=>`<img src="${p}"/>`).join("")}</div>`;
+}
+
+/* =========================================================================
+   INIT
+   ========================================================================= */
+function init(){
+  renderNav();
+  renderCountdown();
+  renderProgress();
+  renderToday();
+  renderHotel();
+  renderWeather();
+  renderDayTabs();
+  curDay=todayIndex();renderDayTabs();renderTimeline();
+  renderSpotFilter();renderSpots();
+  renderChecks();
+  renderPhrases();renderTransport();renderContacts();renderBudget();
+  renderDiary();renderAlbum();
+}
+init();
+
+/* Service Worker 登録（HTTPSホスティング時に一度開けばオフライン動作） */
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+</script>
+</body>
+</html>
