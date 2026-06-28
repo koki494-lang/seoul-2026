@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#fbfbfd" media="(prefers-color-scheme: light)" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -296,7 +296,7 @@ a{color:var(--accent);text-decoration:none;}
 .bcat .c{font-size:12px;color:var(--ink-3);}
 .bcat .v{font-size:16px;font-weight:680;font-variant-numeric:tabular-nums;}
 .binput{display:flex;gap:8px;margin-top:12px;}
-.binput select,.binput input{font:inherit;font-size:14px;padding:11px 12px;border-radius:12px;
+.binput select,.binput input{font:inherit;font-size:16px;padding:11px 12px;border-radius:12px;
   border:1px solid var(--line);background:var(--bg);color:var(--ink);}
 .binput input{flex:1;min-width:0;}
 .binput select{flex:0 0 92px;}
@@ -309,7 +309,7 @@ a{color:var(--accent);text-decoration:none;}
    DIARY / ALBUM
    ========================================================================= */
 .diary-day{margin-bottom:16px;}
-.diary-day textarea{width:100%;font:inherit;font-size:14px;line-height:1.65;border:1px solid var(--line);
+.diary-day textarea{width:100%;font:inherit;font-size:16px;line-height:1.6;border:1px solid var(--line);
   border-radius:13px;padding:12px;background:var(--bg);color:var(--ink);resize:vertical;min-height:74px;}
 .photo-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
 .photo{position:relative;width:74px;height:74px;border-radius:12px;overflow:hidden;border:1px solid var(--line);}
@@ -832,8 +832,10 @@ async function renderWeather(){
   }catch(e){/* オフライン → fallback */}
   weather.innerHTML=dates.map((dt,i)=>{
     let code,hi,lo,rain;
-    if(data){code=data.weather_code[i];hi=Math.round(data.temperature_2m_max[i]);lo=Math.round(data.temperature_2m_min[i]);rain=data.precipitation_probability_max[i];}
-    else{const f=WX_FALLBACK[dt];code=f.c;hi=f.hi;lo=f.lo;rain=f.r;}
+    const f=WX_FALLBACK[dt];
+    if(data && data.temperature_2m_max?.[i]!=null){
+      code=data.weather_code[i];hi=Math.round(data.temperature_2m_max[i]);lo=Math.round(data.temperature_2m_min[i]);rain=data.precipitation_probability_max?.[i]??f.r;
+    }else{code=f.c;hi=f.hi;lo=f.lo;rain=f.r;}
     const [m,d]=dt.split("-").slice(1);
     const dow=["日","月","火","水","木","金","土"][new Date(dt).getDay()];
     return `<div class="wx"><div class="d">${+m}/${+d}(${dow})</div><div class="ico">${wxIcon(code)}</div>
@@ -1139,6 +1141,7 @@ function editPlan(){
 /* =========================================================================
    DIARY + ALBUM
    ========================================================================= */
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));}
 function renderDiary(){
   diaryBox.innerHTML=DAYS.map((d,i)=>{
     const key="d"+i;
@@ -1148,7 +1151,7 @@ function renderDiary(){
         <b style="font-size:15px">Day ${i+1} · ${d.d}(${d.dow})</b>
         <span class="chip">${d.label}</span>
       </div>
-      <textarea placeholder="今日感じたこと、出会った人、食べたもの…" oninput="saveDiaryText('${key}',this.value)">${entry.text||""}</textarea>
+      <textarea placeholder="今日感じたこと、出会った人、食べたもの…" oninput="saveDiaryText('${key}',this.value)">${escapeHtml(entry.text||"")}</textarea>
       <div class="photo-row">
         ${(entry.photos||[]).map((p,pi)=>`<div class="photo"><img src="${p}"/><span class="x" onclick="delPhoto('${key}',${pi})">×</span></div>`).join("")}
         <label class="addphoto">＋<input type="file" accept="image/*" hidden onchange="addPhoto('${key}',this)"/></label>
