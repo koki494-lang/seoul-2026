@@ -194,9 +194,37 @@ a{color:var(--accent);text-decoration:none;}
 .tl-card h4{font-size:15px;margin-bottom:3px;}
 .tl-card .meta{font-size:12px;color:var(--ink-3);}
 .tl-card .note{font-size:12.5px;color:var(--ink-2);margin-top:7px;line-height:1.6;}
-.move{display:flex;align-items:center;gap:9px;margin:2px 0 2px -2px;padding:7px 12px;
-  font-size:12px;color:var(--ink-3);background:var(--bg-soft);border-radius:11px;width:fit-content;}
-.move b{color:var(--ink-2);font-weight:620;}
+/* 移動コネクタ（一目で「手段＋時間」が分かる） */
+.tl-flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-2px 0 12px -30px;padding-left:30px;}
+.tl-flow .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:680;
+  color:var(--ink-2);background:var(--bg-soft);border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;}
+.tl-flow .pill .ic{font-size:14px;}
+.tl-flow .sub{font-size:11.5px;color:var(--ink-3);}
+
+/* 日別ルート（当日のスポットと順路を一覧） */
+.route-card{background:var(--bg-elev);border:1px solid var(--line);border-radius:var(--r);
+  box-shadow:var(--shadow);padding:15px 16px;margin-bottom:18px;}
+.route-card .rc-h{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:680;
+  letter-spacing:.04em;color:var(--ink-3);margin-bottom:11px;}
+.route-stops{display:flex;flex-direction:column;}
+.route-stop{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:560;padding:1px 0;}
+.route-stop .em{width:24px;text-align:center;font-size:16px;}
+.route-stop .nm{flex:1;}
+.route-stop .du{font-size:11px;color:var(--ink-3);font-weight:500;}
+.route-conn{display:flex;align-items:center;gap:7px;padding:3px 0 3px 8px;margin-left:3px;
+  border-left:2px dotted var(--line);font-size:11.5px;color:var(--ink-3);}
+.route-conn b{color:var(--ink-2);font-weight:620;}
+
+/* 交流スポット（補助情報） */
+.social{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line-2);}
+.social:last-child{border-bottom:0;}
+.social .se{width:38px;height:38px;border-radius:11px;background:var(--accent-soft);
+  display:grid;place-items:center;font-size:18px;flex:0 0 auto;}
+.social .si{flex:1;min-width:0;}
+.social .si b{font-size:14px;}
+.social .si .sa{font-size:11.5px;color:var(--ink-3);}
+.social .si .sd{font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.55;}
+.social .si a{font-size:12px;font-weight:620;display:inline-block;margin-top:6px;}
 
 /* =========================================================================
    SPOTS
@@ -385,6 +413,7 @@ a{color:var(--accent);text-decoration:none;}
   <section class="page" id="page-plan">
     <div class="daytabs" id="daytabs"></div>
     <div id="dayHead" style="margin:2px 4px 16px;"></div>
+    <div id="dayRoute"></div>
     <div class="tl" id="timeline"></div>
     <div class="foot">タップで各スポットの詳細・地図が開きます</div>
   </section>
@@ -433,6 +462,12 @@ a{color:var(--accent);text-decoration:none;}
     <div class="acc" id="acc-trans">
       <div class="acc-head" onclick="toggleAcc('acc-trans')"><span class="ic">🚇</span><h4>交通機関の使い方</h4><span class="arw">›</span></div>
       <div class="acc-body"><div class="acc-inner" id="transBox"></div></div>
+    </div>
+
+    <!-- social -->
+    <div class="acc" id="acc-social">
+      <div class="acc-head" onclick="toggleAcc('acc-social')"><span class="ic">🌏</span><h4>海外の人と交流</h4><span class="arw">›</span></div>
+      <div class="acc-body"><div class="acc-inner" id="socialBox"></div></div>
     </div>
 
     <!-- emergency -->
@@ -489,37 +524,37 @@ const HOTEL = {
   note:"北村韓屋村・三清洞・景福宮はすべて徒歩圏。安国駅(3号線)が最寄り。"
 };
 
-/* ---- スポット ---- */
+/* ---- スポット（station=最寄駅 / closed=定休日 / via=おすすめの行き方） ---- */
 const SPOTS = {
   myeongdong:{e:"🛍️",cat:"街歩き",n:"明洞",ko:"명동",hours:"店舗 10:00–22:00 / 屋台は夕方–深夜",price:"散策無料",dur:"1–2時間",
-    area:"中区",map:"명동 명동거리 Myeongdong",
+    area:"中区",station:"明洞駅(4号線6番出口) / 乙支路入口駅(2号線)",closed:"なし",via:"地下鉄が便利",map:"명동 명동거리 Myeongdong",
     desc:"コスメ・グルメ・屋台の定番ストリート。夜のネオンと屋台の匂いで一気に”海外に来た”感が来る。初日の足慣らしにちょうどいい。"},
   bukchon:{e:"🏯",cat:"街歩き",n:"北村韓屋村",ko:"북촌한옥마을",hours:"常時(住宅地。月–土の昼が静かで◎)",price:"無料",dur:"約1時間",
-    area:"鍾路区 / ホテル徒歩圏",map:"북촌한옥마을 Bukchon Hanok Village",
+    area:"鍾路区 / ホテル徒歩圏",station:"安国駅(3号線2番出口) 徒歩5分",closed:"なし(店は月曜休み多め)",via:"ホテルから徒歩",map:"북촌한옥마을 Bukchon Hanok Village",
     desc:"瓦屋根の韓屋が連なる坂道。写真スポットの宝庫。住民が暮らす場所なので、静かに歩くのがマナー。ホテルから歩いて行ける。"},
   samcheong:{e:"☕",cat:"街歩き",n:"三清洞",ko:"삼청동",hours:"カフェ/店 11:00–21:00頃",price:"散策無料",dur:"1–2時間",
-    area:"鍾路区 / ホテル徒歩圏",map:"삼청동길 Samcheong-dong",
+    area:"鍾路区 / ホテル徒歩圏",station:"安国駅(3号線) 徒歩10分",closed:"店舗による",via:"北村から徒歩すぐ",map:"삼청동길 Samcheong-dong",
     desc:"北村から続く、ギャラリーと洒落たカフェの通り。ゆっくりコーヒーで一息つくのに最高。北村とセットで歩くのが鉄板。"},
   starfield:{e:"📚",cat:"映え",n:"ピョルマダン図書館",ko:"별마당도서관",hours:"10:00–22:00",price:"無料",dur:"30分–1時間",
-    area:"江南 / COEX B1–1F",map:"별마당도서관 Starfield Library COEX",
+    area:"江南 / COEX B1–1F",station:"三成駅(2号線)・奉恩寺駅(9号線) 直結",closed:"なし",via:"安国から地下鉄 約30–35分",map:"별마당도서관 Starfield Library COEX",
     desc:"13mの巨大本棚で有名なCOEX内の図書館。圧巻のフォトスポット。座って涼んで、空気を味わうだけでも価値あり。"},
   coex:{e:"🏬",cat:"買い物",n:"COEX Mall",ko:"코엑스몰",hours:"10:30–22:00",price:"無料",dur:"1–2時間",
-    area:"江南",map:"코엑스몰 COEX Mall Samseong",
+    area:"江南",station:"三成駅(2号線) 直結",closed:"なし",via:"ピョルマダン図書館と同じ建物",map:"코엑스몰 COEX Mall Samseong",
     desc:"アジア最大級の地下モール。ピョルマダン図書館もこの中。雨でも一日つぶせる。SMTOWNやアクアリウムも。"},
   euljiro:{e:"🍶",cat:"夜",n:"乙支路(ヒップ乙支路)",ko:"을지로",hours:"店は夕方–深夜",price:"店による",dur:"2–3時間",
-    area:"中区",map:"을지로 힙지로 Euljiro",
+    area:"中区",station:"乙支路3街駅(2・3号線)",closed:"店による(日曜休み多め)",via:"明洞・安国から地下鉄数分",map:"을지로 힙지로 Euljiro",
     desc:"印刷工場街がレトロ酒場のホットスポットに変身したエリア。”ヒップ乙支路”。看板のない隠れ家バーを探す夜が楽しい。"},
   hongdae:{e:"🎧",cat:"夜",n:"弘大",ko:"홍대",hours:"昼–深夜(夜が本番)",price:"店による",dur:"2–4時間",
-    area:"麻浦区",map:"홍대 홍대입구역 Hongdae",
+    area:"麻浦区",station:"弘大入口駅(2号線・空港鉄道) 9番出口",closed:"なし",via:"乙支路3街から2号線 約20分",map:"홍대 홍대입구역 Hongdae",
     desc:"韓国の若者文化の中心。ストリートライブ、クラブ、深夜まで賑わう。今回の旅テーマにいちばん効くエリア。空気を全身で浴びよう。"},
   hangang:{e:"🌉",cat:"自由",n:"漢江公園",ko:"한강공원",hours:"常時",price:"無料",dur:"1–2時間",
-    area:"汝矣島ほか",map:"여의도한강공원 Yeouido Hangang Park",
+    area:"汝矣島ほか",station:"汝矣ナル駅(5号線)",closed:"なし",via:"弘大方面から5号線 / タクシー",map:"여의도한강공원 Yeouido Hangang Park",
     desc:"芝生でチメク(チキン+ビール)。コンビニで買って川辺で過ごす”韓国のリアルな日常”。夕暮れ〜夜景が最高。"},
-  gyeongbokgung:{e:"⛩️",cat:"観光",n:"景福宮",ko:"경복궁",hours:"9:00–18:00(最終入場17:00) ※火曜休館",price:"3,000ウォン(韓服着用で無料)",dur:"約1.5時間",
-    area:"鍾路区 / ホテル徒歩圏",map:"경복궁 Gyeongbokgung Palace",
+  gyeongbokgung:{e:"⛩️",cat:"観光",n:"景福宮",ko:"경복궁",hours:"9:00–18:00(最終入場17:00)",price:"3,000ウォン(韓服着用で無料)",dur:"約1.5時間",
+    area:"鍾路区 / ホテル徒歩圏",station:"景福宮駅(3号線5番出口) / 安国駅",closed:"火曜（7/2木は開館）",via:"ホテルから徒歩 約15分",map:"경복궁 Gyeongbokgung Palace",
     desc:"朝鮮王朝の正宮。守門将交代式は10:00/14:00。7/2(木)は開いてる。朝イチで人が少ないうちに。ホテルから歩ける。"},
   gwanghwamun:{e:"🗽",cat:"観光",n:"光化門広場",ko:"광화문광장",hours:"常時",price:"無料",dur:"30分",
-    area:"鍾路区",map:"광화문광장 Gwanghwamun Square",
+    area:"鍾路区",station:"光化門駅(5号線) / 景福宮駅(3号線)",closed:"なし",via:"景福宮から徒歩 約10分",map:"광화문광장 Gwanghwamun Square",
     desc:"世宗大王と李舜臣将軍の像が立つ大広場。景福宮の正面。最終日、空港へ向かう前にサッと立ち寄れる。"}
 };
 
@@ -528,40 +563,40 @@ const DAYS = [
   {d:"6/29",dow:"月",label:"到着 & 明洞",items:[
     {t:"11:45",ty:"flight",h:"関西空港 ✈️ 出発",meta:"KIX → ICN",note:"いってらっしゃい。e-Arrival Card は機内で最終確認を。"},
     {t:"13:40",ty:"flight",h:"仁川空港 到着",meta:"入国審査 → 荷物 → SIM/Wi-Fi",note:"ahamoはそのまま使える。到着後すぐ機内モード解除＆データ通信ON。T-moneyはコンビニ/駅で購入。"},
-    {move:"AREX＋地下鉄で約1時間20分（ソウル駅経由→3号線 安国）/ 直行ならKakaoTタクシーやAREX直通も"},
+    {move:{mode:"AREX＋地下鉄",min:"約1時間20分",text:"仁川空港 → ソウル駅 → 安国（直通やKakao Tタクシーも可）"}},
     {t:"15:00",ty:"spot",sp:"",h:"STAY OHANA チェックイン",meta:"鍾路区・安国 / 3泊",note:"荷物を置いて身軽に。年齢確認の書類提示を忘れずに。"},
-    {move:"安国 → 明洞：地下鉄で約15分 / タクシー約10分"},
+    {move:{mode:"地下鉄",min:"約15分",text:"安国 → 明洞（タクシーなら約10分）"}},
     {t:"17:30",ty:"spot",sp:"myeongdong",h:"明洞 散策",meta:"街歩き · 1–2時間",note:"まずは”海外に来た”空気を浴びる。屋台、コスメ、ネオン。"},
     {t:"19:00",ty:"meal",h:"韓国で最初の夜ご飯",meta:"明洞周辺",note:"サムギョプサル？カルグクス？初日は気分で。”맛있어요(マシッソヨ)”を言ってみよう。"},
     {t:"21:00",ty:"spot",h:"コンビニ立ち寄り",meta:"GS25 / CU",note:"翌朝の飲み物・夜食。韓国コンビニは宝の山。"},
     {t:"21:30",ty:"spot",h:"ホテルへ",meta:"おやすみ",note:"初日おつかれさま。明日に備えて。"}
   ]},
-  {d:"6/30",dow:"火",label:"北村 & 弘大ナイト",items:[
+  {d:"6/30",dow:"火",label:"北村 & ナイト",start:{em:"🏨",nm:"STAY OHANA",move:{mode:"徒歩",min:"約8分"}},items:[
     {t:"09:30",ty:"spot",sp:"bukchon",h:"北村韓屋村",meta:"街歩き · 約1時間 / ホテルから徒歩",note:"朝の静かな時間が狙い目。坂道の韓屋を写真に。"},
-    {move:"そのまま徒歩で三清洞へ（隣接）"},
+    {move:{mode:"徒歩",min:"すぐ",text:"北村 → 三清洞（隣接）"}},
     {t:"11:00",ty:"spot",sp:"samcheong",h:"三清洞 散策＋カフェ",meta:"街歩き・カフェ · 1–2時間",note:"ギャラリー通りでひと休み。韓国のカフェ文化を体感。"},
     {t:"13:00",ty:"meal",h:"昼：韓国料理",meta:"三清洞 / 鍾路周辺",note:"ビビンバ、参鶏湯、何でも。"},
-    {move:"安国 → 三成(COEX)：地下鉄で約30–35分"},
+    {move:{mode:"地下鉄",min:"約30–35分",text:"安国 → 三成（COEX）"}},
     {t:"15:00",ty:"spot",sp:"starfield",h:"ピョルマダン図書館",meta:"映え · 30分–1時間",note:"巨大本棚で一枚。涼みながら。"},
     {t:"15:45",ty:"spot",sp:"coex",h:"COEX 散策",meta:"買い物 · 1–2時間",note:"地下モールをぶらぶら。"},
-    {move:"COEX → 乙支路：地下鉄で約25分"},
+    {move:{mode:"地下鉄",min:"約25分",text:"COEX → 乙支路"}},
     {t:"18:30",ty:"spot",sp:"euljiro",h:"乙支路で夜ご飯＆バー",meta:"夜 · レトロ酒場",note:"ヒップ乙支路の隠れ家へ。一杯やって温まる。"},
-    {move:"乙支路 → 弘大：2号線で約20分"},
-    {t:"21:30",ty:"spot",sp:"hongdae",h:"弘大",meta:"夜 · クラブは気分次第",note:"今日のメイン。若者文化のど真ん中。無理せず、でも飛び込む勇気を。"},
+    {move:{mode:"地下鉄",min:"約20分",text:"乙支路 → 弘大（2号線・余裕があれば）"}},
+    {t:"21:30",ty:"spot",sp:"hongdae",h:"弘大（余裕があれば）",meta:"夜 · クラブは気分次第",note:"体力と気分が残っていれば。若者文化のど真ん中。無理せず、でも飛び込む勇気を。"},
     {t:"00:00",ty:"flight",h:"⚠ 景福宮は火曜休館",meta:"メモ",note:"今日は景福宮NG。7/2(木)朝に回してあるので安心を。"}
   ]},
   {d:"7/1",dow:"水",label:"自由 & 再会",items:[
-    {t:"終日",ty:"free",h:"自由行動",meta:"気分で動く一日",note:"候補は下のカードから。無理に詰めない。"},
+    {t:"終日",ty:"free",h:"自由行動",meta:"気分で動く一日",note:"候補は下のカードから。無理に詰めない。余白も旅のうち。"},
     {t:"候補",ty:"spot",sp:"hongdae",h:"弘大 再訪",meta:"昼の顔も見てみる",note:""},
     {t:"候補",ty:"spot",sp:"hangang",h:"漢江でチメク",meta:"芝生でのんびり",note:"晴れたら絶対これ。川辺で一番”自分を取り戻せる”時間。"},
     {t:"候補",ty:"spot",h:"カフェ巡り / ショッピング",meta:"気の向くまま",note:"聖水洞や弘大のカフェもおすすめ。"},
-    {t:"18:00",ty:"meal",h:"友達と待ち合わせ 🤝",meta:"フィリピン留学の仲間と再会",note:"今回の旅のハイライト。夜ご飯＆韓国案内をしてもらう。あの頃の自分が、ちゃんと戻ってくる夜。"}
+    {t:"18:00",ty:"meal",h:"友達と待ち合わせ 🤝",meta:"フィリピン留学の仲間と再会",note:"今回の旅のハイライト。夜ご飯＆韓国案内をしてもらう。あの頃の自分が、ちゃんと戻ってくる夜。待ち合わせ場所は事前に確認を。"}
   ]},
-  {d:"7/2",dow:"木",label:"景福宮 & 帰国",items:[
+  {d:"7/2",dow:"木",label:"景福宮 & 帰国",start:{em:"🏨",nm:"STAY OHANA",move:{mode:"徒歩",min:"約15分"}},items:[
     {t:"09:00",ty:"spot",sp:"gyeongbokgung",h:"景福宮",meta:"観光 · 約1.5時間 / ホテルから徒歩",note:"朝イチで。守門将交代式10:00も狙える。火曜じゃないので開いてる◎"},
-    {move:"景福宮 → 光化門：徒歩約10分"},
+    {move:{mode:"徒歩",min:"約10分",text:"景福宮 → 光化門"}},
     {t:"10:30",ty:"spot",sp:"gwanghwamun",h:"光化門広場",meta:"観光 · 30分",note:"最後にソウルの中心で記念撮影。"},
-    {move:"光化門/ソウル駅 → 仁川空港：AREXで約1時間（チェックアウト11:00まで）"},
+    {move:{mode:"AREX",min:"約1時間",text:"光化門 / ソウル駅 → 仁川空港（チェックアウト11:00まで）"}},
     {t:"12:30",ty:"spot",h:"仁川空港へ",meta:"国際線は2–3時間前到着が安心",note:"ホテルで荷物受け取り→空港。e-Ticket/パスポート確認。"},
     {t:"14:00",ty:"spot",h:"ラウンジでひと休み",meta:"出国後",note:"旅の余韻に浸る時間。日記を書くなら今。"},
     {t:"15:55",ty:"flight",h:"仁川空港 ✈️ 出発",meta:"ICN → KIX",note:""},
@@ -580,11 +615,14 @@ const TODOS = [
 ];
 const PACK = [
   {id:"p1",l:"パスポート",s:"最重要。残存期間も確認"},
-  {id:"p2",l:"ahamo (スマホ)",s:"海外データそのまま"},
+  {id:"p2",l:"スマホ（ahamo）",s:"海外データそのまま使える"},
   {id:"p3",l:"モバイルバッテリー",s:"手荷物へ（預け入れNG）"},
   {id:"p4",l:"クレジットカード",s:"タッチ決済が便利"},
   {id:"p5",l:"現金（ウォン）",s:"屋台・市場用に少し"},
-  {id:"p6",l:"充電器",s:"韓国はCタイプ。変換プラグ確認"}
+  {id:"p6",l:"充電器",s:"ケーブルも忘れずに"},
+  {id:"p7",l:"変換プラグ（Cタイプ）",s:"韓国はSE/Cタイプ。これが無いと充電不可"},
+  {id:"p8",l:"常備薬",s:"胃薬・頭痛薬・絆創膏など使い慣れたもの"},
+  {id:"p9",l:"折りたたみ傘",s:"6月末は梅雨。にわか雨が多い"}
 ];
 
 /* ---- 韓国語フレーズ ---- */
@@ -649,6 +687,20 @@ const TRANSPORT = [
     "一般タクシーは初乗り約4,800W〜。深夜割増あり。",
     "目的地はハングルか地図ピンで見せるとスムーズ。"
   ]}
+];
+
+/* ---- 交流スポット（補助情報：海外の人と出会いやすい場所） ---- */
+const SOCIAL = [
+  {e:"🍻",n:"梨泰院（イテウォン）",area:"龍山区 · 外国人が集まるエリア",
+   d:"ソウルで一番インターナショナルな街。一人でも入りやすいパブが多く、自然と英語で話す流れに。",map:"이태원 이태원거리 Itaewon"},
+  {e:"🗣️",n:"弘大の Language Exchange バー",area:"麻浦区 · 弘大",
+   d:"弘大には言語交換イベントを開くバーが点在。「언어교환（言語交換）」で検索。お酒片手に韓国人・各国の旅人と話せる。",map:"홍대 언어교환 펍 language exchange Hongdae"},
+  {e:"🌃",n:"Pub Crawl（パブクロール）",area:"弘大・梨泰院発が多い",
+   d:"ガイドと数軒のバーを巡る世界中の旅人向けツアー。一人参加が前提なので、出会いのハードルが低い。",map:"Seoul Pub Crawl Hongdae"},
+  {e:"🛏️",n:"ホステルのラウンジ / バー",area:"弘大・明洞ほか",
+   d:"宿泊しなくてもバー併設のホステルなら立ち寄れることも。旅人同士の雑談が生まれやすい定番の場所。",map:"Hongdae hostel bar lounge Seoul"},
+  {e:"☕",n:"外国人に人気のカフェ（聖水洞）",area:"城東区 · 聖水洞",
+   d:"”韓国のブルックリン”。旅行者やノマドが多く、相席や会話のきっかけが生まれやすい雰囲気。",map:"성수동 카페거리 Seongsu cafe"}
 ];
 
 /* 予算カテゴリ */
@@ -838,12 +890,59 @@ function selDay(i){
   go('plan');
   document.querySelectorAll('.daytab')[i]?.scrollIntoView({behavior:"smooth",inline:"center",block:"nearest"});
 }
+function moveIcon(mode){
+  if(/徒歩/.test(mode))return"🚶";
+  if(/AREX|電車|鉄道/.test(mode))return"🚆";
+  if(/バス/.test(mode))return"🚌";
+  if(/タクシー/.test(mode))return"🚕";
+  if(/地下鉄|号線/.test(mode))return"🚇";
+  return"🧭";
+}
+/* 日別ルート：当日の順路を一覧＋まとめて地図で開く */
+function renderDayRoute(day){
+  const stops=day.items.filter(it=>it.sp&&SPOTS[it.sp]).map(it=>({sp:it.sp,...SPOTS[it.sp]}));
+  if(stops.length<2)return"";   // ルートと呼べる日だけ表示（自由日などは出さない）
+  // items を順に辿り、各スポット直前の移動を正しく対応づける（移動が無い区間は「すぐ」）
+  let rows="",pending=null,seen=0;
+  if(day.start){
+    rows+=`<div class="route-stop"><span class="em">${day.start.em}</span><span class="nm">${day.start.nm}</span></div>`;
+    if(day.start.move)pending=day.start.move;
+  }
+  const conn=m=>`<div class="route-conn">${moveIcon(m.mode)} <b>${m.mode}</b>・${m.min}</div>`;
+  day.items.forEach(it=>{
+    if(it.move){pending=it.move;return;}
+    if(!(it.sp&&SPOTS[it.sp]))return;
+    const s=SPOTS[it.sp];
+    if(seen>0||day.start){
+      rows+= pending?conn(pending):conn({mode:"徒歩",min:"すぐ"});
+    }
+    rows+=`<div class="route-stop"><span class="em">${s.e}</span><span class="nm">${s.n}</span><span class="du">⏱${s.dur}</span></div>`;
+    pending=null;seen++;
+  });
+  // Google Maps 複数地点ルート（現在地から）
+  const names=stops.map(s=>encodeURIComponent(s.ko));
+  const dest=names[names.length-1];
+  const way=names.slice(0,-1).join("%7C");
+  const gurl=`https://www.google.com/maps/dir/?api=1&destination=${dest}${way?`&waypoints=${way}`:""}&travelmode=transit`;
+  const nurl=`https://map.naver.com/p/search/${encodeURIComponent(stops[0].ko)}`;
+  return `<div class="route-card">
+    <div class="rc-h">🗺 この日のルート（${stops.length}スポット）</div>
+    <div class="route-stops">${rows}</div>
+    <div class="row" style="gap:8px;margin-top:13px">
+      <a class="btn sm" style="flex:1" href="${nurl}" target="_blank" rel="noopener">🟢 Naverで開く</a>
+      <a class="btn sm" style="flex:1" href="${gurl}" target="_blank" rel="noopener">🔵 Google地図</a>
+    </div>
+  </div>`;
+}
 function renderTimeline(){
   const day=DAYS[curDay];
   dayHead.innerHTML=`<div class="eyebrow">DAY ${curDay+1} · ${day.d}(${day.dow})</div><h2 style="font-size:22px;margin-top:4px">${day.label}</h2>`;
+  dayRoute.innerHTML=renderDayRoute(day);
   let html="",n=0;
   day.items.forEach(it=>{
-    if(it.move){html+=`<div class="move">🚶 <b>移動</b> · ${it.move}</div>`;return;}
+    if(it.move){const m=it.move;
+      html+=`<div class="tl-flow"><span class="pill"><span class="ic">${moveIcon(m.mode)}</span>${m.mode}・${m.min}</span>${m.text?`<span class="sub">${m.text}</span>`:""}</div>`;
+      return;}
     n++;
     const sp=it.sp&&SPOTS[it.sp];
     const dot={flight:"✈️",meal:"🍽",spot:"📍",free:"✨"}[it.ty]||"•";
@@ -855,7 +954,7 @@ function renderTimeline(){
         <h4>${it.h}</h4>
         ${it.meta?`<div class="meta">${it.meta}</div>`:""}
         ${it.note?`<div class="note">${it.note}</div>`:""}
-        ${sp?`<div class="row" style="margin-top:11px;gap:7px"><span class="chip accent">詳細を見る ›</span><span class="chip">⏱ ${sp.dur}</span></div>`:""}
+        ${sp?`<div class="row" style="margin-top:11px;gap:7px"><span class="chip accent">詳細を見る ›</span><span class="chip">🚇 ${sp.station.split(/[ (]/)[0]}</span><span class="chip">⏱ ${sp.dur}</span></div>`:""}
       </div></div>`;
   });
   timeline.innerHTML=html;
@@ -879,7 +978,8 @@ function renderSpots(){
           <div class="row" style="justify-content:space-between"><h4>${s.n}</h4><span class="chip">${s.cat}</span></div>
           <div class="ko">${s.ko} · ${s.area}</div>
           <div class="spot-meta">
-            <span class="m"><b>🕐</b>${s.dur}</span>
+            <span class="m"><b>🚇</b>${s.station.split(/[ (]/)[0]}</span>
+            <span class="m"><b>⏱</b>${s.dur}</span>
             <span class="m"><b>💴</b>${s.price}</span>
           </div>
         </div>
@@ -899,6 +999,7 @@ function mapLinks(query,koQuery){
       <a class="btn sm ghost" style="flex:1" href="https://map.kakao.com/?q=${nq}" target="_blank" rel="noopener">🟡 KakaoMap</a>
       <a class="btn sm ghost" style="flex:1" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">🔵 Google Maps</a>
     </div>
+    <a class="btn sm ghost" style="width:100%;margin-top:8px" href="https://www.google.com/maps/dir/?api=1&destination=${q}&travelmode=transit" target="_blank" rel="noopener">🧭 現在地からのルート</a>
     <div class="tiny muted" style="margin-top:9px;text-align:center">韓国ではGoogleの経路案内が制限されます。移動は<b>Naver Map</b>が確実。</div>`;
 }
 function openSpot(id){
@@ -910,8 +1011,11 @@ function openSpot(id){
     </div>
     <p style="font-size:14px;line-height:1.7;color:var(--ink-2);margin:14px 0 6px">${s.desc}</p>
     <div class="detail-row"><span class="k">🕐 営業</span><span class="v">${s.hours}</span></div>
+    ${s.closed?`<div class="detail-row"><span class="k">🚫 定休日</span><span class="v">${s.closed}</span></div>`:""}
     <div class="detail-row"><span class="k">💴 料金</span><span class="v">${s.price}</span></div>
     <div class="detail-row"><span class="k">⏱ 所要</span><span class="v">${s.dur}</span></div>
+    ${s.station?`<div class="detail-row"><span class="k">🚇 最寄駅</span><span class="v">${s.station}</span></div>`:""}
+    ${s.via?`<div class="detail-row"><span class="k">🧭 行き方</span><span class="v">${s.via}</span></div>`:""}
     <div class="detail-row"><span class="k">📍 エリア</span><span class="v">${s.area}</span></div>
     ${mapLinks(s.map, s.ko+" "+s.n)}`;
   sheetBg.classList.add("show");sheet.classList.add("show");
@@ -967,6 +1071,15 @@ function renderContacts(){
       <a class="call" href="tel:${c.tel.replace(/[^+\d]/g,'')}">${c.tel}</a>
     </div>`).join("");
 }
+function renderSocial(){
+  socialBox.innerHTML=`<p class="tiny muted" style="margin:6px 0 8px">観光より「人」を大切にする旅に。立ち寄れそうな所だけどうぞ。</p>`+
+    SOCIAL.map(s=>`<div class="social">
+      <span class="se">${s.e}</span>
+      <div class="si"><b>${s.n}</b><div class="sa">${s.area}</div><div class="sd">${s.d}</div>
+        <a href="https://map.naver.com/p/search/${encodeURIComponent(s.map)}" target="_blank" rel="noopener">🟢 Naverで見る ›</a>
+      </div>
+    </div>`).join("");
+}
 /* budget — ウォン/円 両対応。集計は円換算（予算が円のため）。 */
 function toYen(v,cur){return cur==="JPY"?v:Math.round(v*STATE.rate/100);}
 function entryLabel(b){
@@ -991,8 +1104,8 @@ function renderBudget(){
       ${BUDGET_CATS.map(c=>`<div class="bcat"><div class="c">${c}</div><div class="v">¥${byCat[c].toLocaleString()}</div></div>`).join("")}
     </div>
     <div class="binput">
-      <select id="bCat">${BUDGET_CATS.map(c=>`<option>${c}</option>`).join("")}</select>
-      <select id="bCur"><option value="KRW">₩</option><option value="JPY">¥</option></select>
+      <select id="bCat" style="flex:1">${BUDGET_CATS.map(c=>`<option>${c}</option>`).join("")}</select>
+      <select id="bCur" style="flex:0 0 72px"><option value="KRW">₩</option><option value="JPY">¥</option></select>
     </div>
     <div class="binput" style="margin-top:8px">
       <input id="bAmt" type="number" inputmode="numeric" placeholder="金額（現地はウォン）" style="flex:1" />
@@ -1094,7 +1207,7 @@ function init(){
   curDay=todayIndex();renderDayTabs();renderTimeline();
   renderSpotFilter();renderSpots();
   renderChecks();
-  renderPhrases();renderTransport();renderContacts();renderBudget();
+  renderPhrases();renderTransport();renderContacts();renderSocial();renderBudget();
   renderDiary();renderAlbum();
 }
 init();
